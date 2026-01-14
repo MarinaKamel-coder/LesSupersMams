@@ -37,13 +37,14 @@ enum BookingStatus {
 // --- Modèles ---
  
 model User {
-  id            String    @id @default(uuid())
+  id            Int    @id @default(autoincrement())
   email         String    @unique
   password      String
   firstName     String
   lastName      String
   avatarUrl     String?
   bio           String?
+  rating        Float     @default(0)
   role          Role      @default(USER)
   // Relations
   vehicles      Vehicle[]
@@ -56,7 +57,7 @@ model User {
 }
  
 model Vehicle {
-  id          String   @id @default(uuid())
+  id          Int   @id @default(autoincrement())
   brand       String   // ex: Toyota
   model       String   // ex: Corolla
   color       String
@@ -64,13 +65,13 @@ model Vehicle {
   seats       Int      // Nombre de places totales
   consumption Float    // L/100km ou kWh/100km
   fuelType    FuelType
-  ownerId     String
+  ownerId     Int
   owner       User     @relation(fields: [ownerId], references: [id])
   trips       Trip[]
 }
  
 model Trip {
-  id                String   @id @default(uuid())
+  id                Int   @id @default(autoincrement())
   departureCity     String
   arrivalCity       String
   departureTime     DateTime
@@ -82,9 +83,9 @@ model Trip {
   co2SavedPerPass   Float    // Stocké après calcul automatique
  
   // Relations
-  driverId          String
+  driverId          Int
   driver            User      @relation("Driver", fields: [driverId], references: [id])
-  vehicleId         String
+  vehicleId         Int
   vehicle           Vehicle   @relation(fields: [vehicleId], references: [id])
   bookings          Booking[]
   messages          Message[]
@@ -94,11 +95,11 @@ model Trip {
 }
  
 model Booking {
-  id          String        @id @default(uuid())
+  id          Int        @id @default(autoincrement())
   status      BookingStatus @default(PENDING)
-  tripId      String
+  tripId      Int
   trip        Trip          @relation(fields: [tripId], references: [id])
-  passengerId String
+  passengerId Int
   passenger   User          @relation("Passenger", fields: [passengerId], references: [id])
  
   createdAt   DateTime      @default(now())
@@ -107,26 +108,26 @@ model Booking {
 }
  
 model Message {
-  id        String   @id @default(uuid())
+  id        Int   @id @default(autoincrement())
   content   String
   sentAt    DateTime @default(now())
   isRead    Boolean  @default(false)
  
-  tripId    String
+  tripId    Int
   trip      Trip     @relation(fields: [tripId], references: [id])
-  senderId  String
+  senderId  Int
   sender    User     @relation(fields: [senderId], references: [id])
 }
  
 model Review {
-  id          String   @id @default(uuid())
+  id          Int   @id @default(autoincrement())
   rating      Int      // 1-5
   comment     String?
-  tripId      String
+  tripId      Int
   trip        Trip     @relation(fields: [tripId], references: [id])
-  reviewerId  String
+  reviewerId  Int
   reviewer    User     @relation("Reviewer", fields: [reviewerId], references: [id])
-  revieweeId  String
+  revieweeId  Int
   reviewee    User     @relation("Reviewee", fields: [revieweeId], references: [id])
  
   createdAt   DateTime @default(now())
