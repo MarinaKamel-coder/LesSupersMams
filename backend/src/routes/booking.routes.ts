@@ -1,0 +1,24 @@
+import {Router} from 'express';
+import {requestBooking, updateBookingStatus, getMyBookings,} from '../controllers/booking.controller';
+import {authenticate} from '../middlewares/auth.middleware';
+
+const router = Router();
+/**
+ * @route   POST /bookings
+ * @desc    Créer une réservation pour un trajet
+ * @access  Authenticated users
+ */
+router.post('/', authenticate, requestBooking);
+/**
+ * @route Patch bookings/:bookingId/status
+ * @desc  Mettre à jour le statut d'une réservation (accepter ou refuser)
+ * @access Authenticated users
+ */
+router.patch('/:bookingId/status', authenticate, updateBookingStatus);
+/**
+ * @route   GET /bookings/my
+ * @desc    Récupérer les réservations de l'utilisateur connecté
+ * @access  Authenticated users
+ */
+router.get('/my', authenticate, getMyBookings);
+export default router;

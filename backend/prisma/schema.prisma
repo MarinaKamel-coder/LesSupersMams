@@ -13,25 +13,122 @@ datasource db {
   provider = "postgresql"
 }
 
-// ========================================
-// MODÈLES
-// ========================================
+// --- Énumérations ---
+ 
 enum Role {
-  ADMIN
   USER
+  ADMIN
 }
+ 
+enum FuelType {
+  ESSENCE
+  DIESEL
+  ELECTRIQUE
+  HYBRIDE
+}
+ 
+enum BookingStatus {
+  PENDING
+  ACCEPTED
+  REJECTED
+  CANCELLED
+}
+ 
+// --- Modèles ---
+ 
 model User {
-  id        String   @id @default(cuid())
-  email     String   @unique
-  password  String
-  name      String?
-  role      Role     @default(USER)
-  isActive  Boolean  @default(true) @map("is_active")
-  createdAt DateTime @default(now()) @map("created_at")
-  updatedAt DateTime @updatedAt @map("updated_at")
-
+  id            Int    @id @default(autoincrement())
+  email         String    @unique
+  password      String
+  firstName     String
+  lastName      String
+  avatarUrl     String?
+  bio           String?
+  rating        Float     @default(0)
+  role          Role      @default(USER)
   // Relations
-  
-
-  @@map("users")  // Nom de la table en DB
+  vehicles      Vehicle[]
+  tripsPosted   Trip[]    @relation("Driver")
+  bookings      Booking[] @relation("Passenger")
+  messagesSent  Message[]
+  reviewsGiven  Review[]  @relation("Reviewer")
+  reviewsRecd   Review[]  @relation("Reviewee")
+  createdAt     DateTime  @default(now())
+}
+ 
+model Vehicle {
+  id          Int   @id @default(autoincrement())
+  brand       String   // ex: Toyota
+  model       String   // ex: Corolla
+  color       String
+  plate       String   @unique
+  seats       Int      // Nombre de places totales
+  consumption Float    // L/100km ou kWh/100km
+  fuelType    FuelType
+  ownerId     Int
+  owner       User     @relation(fields: [ownerId], references: [id])
+  trips       Trip[]
+}
+ 
+model Trip {
+  id                Int   @id @default(autoincrement())
+  departureCity     String
+  arrivalCity       String
+  departureTime     DateTime
+  availableSeats    Int
+  pricePerSeat      Float
+  description       String?
+  distanceKm        Float
+  durationMin       Int
+  co2SavedPerPass   Float    // Stocké après calcul automatique
+ 
+  // Relations
+  driverId          Int
+  driver            User      @relation("Driver", fields: [driverId], references: [id])
+  vehicleId         Int
+  vehicle           Vehicle   @relation(fields: [vehicleId], references: [id])
+  bookings          Booking[]
+  messages          Message[]
+  reviews           Review[]
+ 
+  createdAt         DateTime  @default(now())
+}
+ 
+model Booking {
+  id          Int        @id @default(autoincrement())
+  status      BookingStatus @default(PENDING)
+  tripId      Int
+  trip        Trip          @relation(fields: [tripId], references: [id])
+  passengerId Int
+  passenger   User          @relation("Passenger", fields: [passengerId], references: [id])
+ 
+  createdAt   DateTime      @default(now())
+ 
+  @@unique([tripId, passengerId]) // Empêche un passager de réserver 2x le même trajet
+}
+ 
+model Message {
+  id        Int   @id @default(autoincrement())
+  content   String
+  sentAt    DateTime @default(now())
+  isRead    Boolean  @default(false)
+ 
+  tripId    Int
+  trip      Trip     @relation(fields: [tripId], references: [id])
+  senderId  Int
+  sender    User     @relation(fields: [senderId], references: [id])
+}
+ 
+model Review {
+  id          Int   @id @default(autoincrement())
+  rating      Int      // 1-5
+  comment     String?
+  tripId      Int
+  trip        Trip     @relation(fields: [tripId], references: [id])
+  reviewerId  Int
+  reviewer    User     @relation("Reviewer", fields: [reviewerId], references: [id])
+  revieweeId  Int
+  reviewee    User     @relation("Reviewee", fields: [revieweeId], references: [id])
+ 
+  createdAt   DateTime @default(now())
 }
