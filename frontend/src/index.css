@@ -83,6 +83,41 @@ button:disabled {
   box-shadow: none;
 }
 
+.gc-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  border-radius: 999px;
+  padding: 10px 14px;
+  font-weight: 700;
+  text-decoration: none;
+}
+
+.gc-btn:hover {
+  text-decoration: none;
+}
+
+.gc-btnPrimary {
+  background: var(--primary);
+  color: #fff;
+  border-color: rgba(22, 163, 74, 0.35);
+}
+
+.gc-btnPrimary:hover {
+  background: var(--primary-700);
+  border-color: rgba(22, 163, 74, 0.55);
+  box-shadow: 0 14px 30px rgba(22, 163, 74, 0.18);
+}
+
+.gc-btnSecondary {
+  background: rgba(15, 23, 42, 0.04);
+}
+
+.gc-btnSecondary:hover {
+  background: rgba(15, 23, 42, 0.06);
+}
+
 input,
 select,
 textarea {
@@ -209,6 +244,23 @@ textarea:focus {
   border-radius: 18px;
 }
 
+.gc-homeHero {
+  position: relative;
+  overflow: hidden;
+}
+
+.gc-homeHero::after {
+  content: "";
+  position: absolute;
+  right: -220px;
+  top: -260px;
+  width: 520px;
+  height: 520px;
+  border-radius: 999px;
+  background: radial-gradient(circle at 30% 30%, rgba(22, 163, 74, 0.25), transparent 60%);
+  pointer-events: none;
+}
+
 .gc-stat {
   display: grid;
   gap: 6px;
@@ -226,6 +278,12 @@ textarea:focus {
 .gc-statValue {
   font-size: 26px;
   font-weight: 900;
+  line-height: 1.05;
+  letter-spacing: -0.02em;
+  background: linear-gradient(90deg, var(--primary-700), #10b981);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
 }
 
 .gc-alert {
