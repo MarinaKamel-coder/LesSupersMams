@@ -33,6 +33,7 @@ export const userController = {
       return res.status(500).json({ success: false, message: 'Erreur dashboard' });
     }
   },
+  
 
   /**
    * GET /profile - Profil utilisateur et véhicules
@@ -42,15 +43,28 @@ export const userController = {
       const userId = req.user?.sub;
       if (!userId) return res.status(401).json({ success: false });
 
-      const [user, stats] = await Promise.all([
+      const [userRecord, stats] = await Promise.all([
         prisma.user.findUnique({
           where: { id: userId },
-          include: { vehicles: true }
+          select: {
+            id: true,
+            email: true,
+            firstName: true,
+            lastName: true,
+            avatarUrl: true,
+            bio: true,
+            rating: true,
+            role: true,
+            createdAt: true,
+            vehicles: true,
+            tripsPosted: { orderBy: { departureTime: 'asc' } },
+            bookings: { include: { trip: true } }
+          }
         }),
         getUserCompleteStatsLogic(userId)
       ]);
 
-      return res.status(200).json({ success: true, data: { user, stats } });
+return res.status(200).json({ success: true, data: { user: userRecord, stats } });
     } catch (error) {
       return res.status(500).json({ success: false, message: 'Erreur profil' });
     }
@@ -199,11 +213,46 @@ async function getRecentConversationsLogic(userId: number, limit: number = 5) {
 }
 
 async function getLeaderboardPositionLogic(userId: number) {
-  const users = await prisma.user.findMany({
-    include: { _count: { select: { tripsPosted: true } } },
-    orderBy: { tripsPosted: { _count: 'desc' } }
+  // 1. On récupère d'abord le nombre de trajets de l'utilisateur actuel
+  const userStats = await prisma.user.findUnique({
+    where: { id: userId },
+    select: {
+      _count: {
+        select: { tripsPosted: true }
+      }
+    }
   });
-  return users.findIndex(u => u.id === userId) + 1;
+
+  if (!userStats) return 0;
+
+  const myTripsCount = userStats._count.tripsPosted;
+
+  // 2. On compte combien d'utilisateurs ont strictement plus de trajets que nous
+  // Note: On filtre par le nombre de trajets via une sous-requête ou agrégation
+  const rank = await prisma.user.count({
+    where: {
+      tripsPosted: {
+        some: {} // On s'assure qu'ils ont des trajets
+      },
+      // On utilise une approche par filtrage sur l'agrégation si supportée, 
+      // sinon on compare le total via une logique simple :
+    },
+  });  
+  const leadersCount = await prisma.trip.groupBy({
+    by: ['driverId'],
+    _count: {
+      id: true
+    },
+    having: {
+      id: {
+        _count: {
+          gt: myTripsCount
+        }
+      }
+    }
+  });
+
+  return leadersCount.length + 1;
 }
 
 function generateEcoBadges(co2: number, trips: number): string[] {
