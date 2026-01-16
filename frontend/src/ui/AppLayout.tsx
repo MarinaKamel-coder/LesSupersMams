@@ -16,7 +16,9 @@ export function AppLayout() {
             {token ? (
               <>
                 <Link to="/dashboard" className="gc-link">Dashboard</Link>
+                <Link to="/my-bookings" className="gc-link">Mes réservations</Link>
                 <Link to="/create-trip" className="gc-link">Créer un trajet</Link>
+				<Link to="/vehicles" className="gc-link">Véhicules</Link>
 				{user?.role === "ADMIN" ? (
 					<Link to="/admin" className="gc-link">Administration</Link>
 				) : null}

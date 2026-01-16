@@ -87,6 +87,54 @@ return res.status(200).json({ success: true, data: { user: userRecord, stats } }
   },
 
   /**
+   * GET /public/users/:userId - Profil public (sans auth)
+   */
+  getPublicProfile: async (req: Request, res: Response) => {
+    try {
+      const userId = Number(req.params.userId);
+      if (!userId || Number.isNaN(userId)) {
+        return res.status(400).json({ success: false, message: "ID invalide" });
+      }
+
+      const now = new Date();
+
+      const userRecord = await prisma.user.findUnique({
+        where: { id: userId },
+        select: {
+          id: true,
+          firstName: true,
+          lastName: true,
+          avatarUrl: true,
+          bio: true,
+          rating: true,
+          role: true,
+          createdAt: true,
+          tripsPosted: {
+            where: { departureTime: { gt: now } },
+            orderBy: { departureTime: "asc" },
+            select: {
+              id: true,
+              departureCity: true,
+              arrivalCity: true,
+              departureTime: true,
+              pricePerSeat: true,
+              availableSeats: true,
+            },
+          },
+        },
+      });
+
+      if (!userRecord) {
+        return res.status(404).json({ success: false, message: "Utilisateur non trouvé" });
+      }
+
+      return res.status(200).json({ success: true, data: { user: userRecord } });
+    } catch {
+      return res.status(500).json({ success: false, message: "Erreur profil public" });
+    }
+  },
+
+  /**
    * Endpoints granulaires pour tes routes spécifiques
    */
   getPersonalStats: async (req: Request, res: Response) => {

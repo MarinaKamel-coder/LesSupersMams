@@ -3,7 +3,7 @@ import {useAuth} from "../auth/AuthContext";
 import {useState} from "react";
 
 export function HomePage() {
-    const { user, isLoading} = useAuth();
+  const { user, isLoading} = useAuth();
     const navigate = useNavigate();
     //Recherche Rapide
     const [from, setFrom] = useState("");
@@ -12,7 +12,11 @@ export function HomePage() {
 
   function onSearch(e: React.FormEvent) {
         e.preventDefault();
-        navigate(`/search?from=${from}&to=${to}&date=${date}`);
+      const params = new URLSearchParams();
+      if (from.trim()) params.set("departure", from.trim());
+      if (to.trim()) params.set("arrival", to.trim());
+      if (date) params.set("date", date);
+      navigate(`/booking?${params.toString()}`);
     }
      if (isLoading) {
     return <p>Chargement...</p>;
@@ -30,6 +34,7 @@ export function HomePage() {
             <>
               <Link className="gc-link" to="/dashboard">Aller au dashboard</Link>
               <Link className="gc-link" to="/create-trip">Publier un trajet</Link>
+              <button type="button" onClick={() => navigate("/booking")}>Réservation</button>
             </>
           ) : (
             <Link className="gc-link" to="/login">Se connecter / S’inscrire</Link>

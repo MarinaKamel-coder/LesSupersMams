@@ -1,5 +1,5 @@
 import {Router} from 'express';
-import {requestBooking, updateBookingStatus, getMyBookings,} from '../controllers/booking.controller';
+import {requestBooking, updateBookingStatus, getMyBookings, cancelBooking,} from '../controllers/booking.controller';
 import {authenticate} from '../middlewares/auth.middleware';
 
 const router = Router();
@@ -21,4 +21,11 @@ router.patch('/:bookingId/status', authenticate, updateBookingStatus);
  * @access  Authenticated users
  */
 router.get('/my', authenticate, getMyBookings);
+
+/**
+ * @route   DELETE /bookings/:bookingId
+ * @desc    Annuler une réservation (passager)
+ * @access  Authenticated users
+ */
+router.delete('/:bookingId', authenticate, cancelBooking);
 export default router;

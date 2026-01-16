@@ -66,7 +66,7 @@ export function AdministrationPage() {
 		},
 	});
 
-	const users = usersQuery.data?.data ?? [];
+	const users = useMemo(() => usersQuery.data?.data ?? [], [usersQuery.data]);
 	const counts = useMemo(() => {
 		const adminCount = users.filter((u) => u.role === "ADMIN").length;
 		return { adminCount, userCount: users.length };

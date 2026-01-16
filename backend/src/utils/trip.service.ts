@@ -29,7 +29,7 @@ export const createTripLogic = async (driverId: number, tripData: any) => {
     },
     include: {
       vehicle: true,
-      driver: { select: { firstName: true, lastName: true, rating: true } }
+      driver: { select: { id: true, firstName: true, lastName: true, rating: true } }
     }
   });
 };
@@ -50,7 +50,7 @@ export const getAllTripsService = async (filters: any = {}) => {
       })
     },
     include: {
-      driver: { select: { firstName: true, lastName: true, avatarUrl: true, rating: true } },
+      driver: { select: { id: true, firstName: true, lastName: true, avatarUrl: true, rating: true } },
       vehicle: true
     },
     orderBy: { departureTime: 'asc' }
@@ -64,7 +64,7 @@ export const getTripByIdService = async (tripId: number) => {
   return await prisma.trip.findUnique({
     where: { id: tripId },
     include: {
-      driver: { select: { firstName: true, lastName: true, rating: true, bio: true, avatarUrl: true } },
+      driver: { select: { id: true, firstName: true, lastName: true, rating: true, bio: true, avatarUrl: true } },
       vehicle: true,
       bookings: { include: { passenger: { select: { firstName: true, avatarUrl: true } } } }
     }

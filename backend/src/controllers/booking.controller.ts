@@ -161,3 +161,59 @@ export async function getMyBookings(req: Request, res: Response) {
     return res.status(500).json({ message: "Internal server error" });
   }
 }
+
+/**
+ * == Annuler une réservation (passager) ==
+ * DELETE /bookings/:bookingId
+ */
+export async function cancelBooking(req: Request, res: Response) {
+  try {
+    const userId = req.user?.sub;
+    const bookingId = Number(req.params.bookingId);
+
+    if (!userId) {
+      return res.status(401).json({ message: "Unauthorized" });
+    }
+    if (!bookingId || Number.isNaN(bookingId)) {
+      return res.status(400).json({ message: "ID invalide" });
+    }
+
+    const booking = await prisma.booking.findUnique({
+      where: { id: bookingId },
+      include: { trip: true },
+    });
+
+    if (!booking) {
+      return res.status(404).json({ message: "Booking not found" });
+    }
+
+    if (booking.passengerId !== userId) {
+      return res.status(403).json({ message: "Action non autorisée." });
+    }
+
+    if (booking.status === "CANCELLED") {
+      return res.status(400).json({ message: "Cette réservation est déjà annulée." });
+    }
+    if (booking.status === "REJECTED") {
+      return res.status(400).json({ message: "Cette réservation a été refusée." });
+    }
+
+    const updatedBooking = await prisma.booking.update({
+      where: { id: bookingId },
+      data: { status: "CANCELLED" },
+    });
+
+    // Si la réservation était acceptée, libérer une place.
+    if (booking.status === "ACCEPTED") {
+      await prisma.trip.update({
+        where: { id: booking.tripId },
+        data: { availableSeats: { increment: 1 } },
+      });
+    }
+
+    return res.json({ booking: updatedBooking });
+  } catch (error) {
+    console.error(error);
+    return res.status(500).json({ message: "Internal server error" });
+  }
+}

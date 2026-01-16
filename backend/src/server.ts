@@ -11,6 +11,7 @@ import bookingRoutes from './routes/booking.routes';
 import messageRoutes from './routes/message.routes';
 import reviewRoutes from './routes/review.routes';
 import adminRoutes from './routes/admin.routes';
+import publicRoutes from './routes/public.routes';
 
 // Configuration
 dotenv.config();
@@ -31,6 +32,7 @@ app.use('/api/bookings', bookingRoutes);
 app.use('/api/messages', messageRoutes);
 app.use('/api/reviews', reviewRoutes);
 app.use('/api/admin', adminRoutes);
+app.use('/api/public', publicRoutes);
 
 // --- Route de santé (Health Check) ---
 app.get('/', (req, res) => {
