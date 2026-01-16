@@ -69,7 +69,7 @@ return res.status(200).json({ success: true, data: { user: userRecord, stats } }
       return res.status(500).json({ success: false, message: 'Erreur profil' });
     }
   },
-  
+
   /**
    * PUT /profile - Mise à jour des infos
    */
