@@ -5,9 +5,9 @@
   "main": "server.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "start": "node --import tsx src/index.ts",
-    "dev": "node --import tsx src/index.ts",
-    "seed": "ts-node --transpile-only prisma/seed.ts"
+    "start": "node --import tsx src/server.ts",
+    "dev": "node --import tsx src/server.ts",
+    "seed": "node --import tsx prisma/seed.ts"
    
   },
   "keywords": [],
