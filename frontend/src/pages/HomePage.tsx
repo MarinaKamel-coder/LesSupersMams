@@ -10,7 +10,7 @@ export function HomePage() {
     const [to, setTo] = useState("");
     const [date, setDate] = useState("");
 
-    function onsearch(e: React.FormEvent) {
+  function onSearch(e: React.FormEvent) {
         e.preventDefault();
         navigate(`/search?from=${from}&to=${to}&date=${date}`);
     }
@@ -19,63 +19,64 @@ export function HomePage() {
   }
 
   return (
-    <div style={{ maxWidth: 1000, margin: "0 auto", padding: 24 }}>
-      {/* ===== HEADER ===== */}
-      <header
-        style={{
-          display: "flex",
-          justifyContent: "space-between",
-          alignItems: "center",
-          marginBottom: 32,
-        }}
-      >
-        <h1 style={{ color: "green" }}> GreenCommute </h1>
-
-        <nav style={{ display: "flex", gap: 12 }}>
-          {!user ? (
+    <div className="gc-grid" style={{ gap: 18 }}>
+      <section className="gc-hero">
+        <h1 className="gc-title">GreenCommute</h1>
+        <p className="gc-subtitle">
+          Plateforme de covoiturage écologique — réduis tes émissions en partageant tes trajets.
+        </p>
+        <div style={{ marginTop: 12, display: "flex", gap: 10, flexWrap: "wrap" }}>
+          {user ? (
             <>
-              <Link to="/loginPage">Connexion</Link>
-              <Link to="/register">Inscription</Link>
+              <Link className="gc-link" to="/dashboard">Aller au dashboard</Link>
+              <Link className="gc-link" to="/create-trip">Publier un trajet</Link>
             </>
           ) : (
-            <>
-              <Link to="/messages">Messages</Link>
-              <Link to="/create-trip">Créer un trajet</Link>
-            </>
+            <Link className="gc-link" to="/login">Se connecter / S’inscrire</Link>
           )}
-        </nav>
-      </header>
-        {/* ===== HERO  ===== */}
-      <section style={{ marginBottom: 40 }}>
-        <h2>Covoiturage simple, rapide et écologique 🌱</h2>
-        <p>
-          Trouvez un trajet près de chez vous ou partagez le vôtre en quelques clics.
-        </p>
+        </div>
       </section>
-{/* ===== LIENS RAPIDES ===== */}
-      <section>
-        <h3>Accès rapide</h3>
 
-        <ul style={{ display: "grid", gap: 8, listStyle: "none", padding: 0 }}>
-          <li>
-            <Link to="/">🔍 Page de recherche</Link>
-          </li>
-          <li>
-            <Link to="/">🚗 Détails d’un trajet</Link>
-          </li>
-          <li>
-            <Link to="/CreateTripPage">➕ Créer un trajet</Link>
-          </li>
-          <li>
-            <Link to="/">💬 Messagerie</Link>
-          </li>
-          <li>
-            <Link to="/LoginPage">🔐 Connexion</Link>
-          </li>
-          <li>
-            <Link to="/">📝 Inscription</Link>
-          </li>
-        </ul>
+      <section className="gc-card">
+        <div className="gc-cardBody">
+          <h2 style={{ marginTop: 0 }}>Recherche rapide</h2>
+          <form onSubmit={onSearch} className="gc-grid" style={{ maxWidth: 680 }}>
+            <div className="gc-grid gc-grid-3" style={{ gap: 12 }}>
+              <input
+                placeholder="Ville de départ"
+                value={from}
+                onChange={(e) => setFrom(e.target.value)}
+              />
+              <input
+                placeholder="Ville d'arrivée"
+                value={to}
+                onChange={(e) => setTo(e.target.value)}
+              />
+              <input type="date" value={date} onChange={(e) => setDate(e.target.value)} />
+            </div>
+            <div style={{ display: "flex", gap: 10, alignItems: "center" }}>
+              <button type="submit">Rechercher</button>
+              <span style={{ color: "var(--muted)", fontSize: 13 }}>
+                Astuce: commence par Montréal → Québec.
+              </span>
+            </div>
+          </form>
+        </div>
+      </section>
+
+      <section className="gc-grid gc-grid-3">
+        <div className="gc-card"><div className="gc-cardBody">
+          <h3 style={{ marginTop: 0 }}>Impact</h3>
+          <p style={{ margin: 0, color: "var(--muted)" }}>Chaque trajet partagé divise les émissions par passager.</p>
+        </div></div>
+        <div className="gc-card"><div className="gc-cardBody">
+          <h3 style={{ marginTop: 0 }}>Confiance</h3>
+          <p style={{ margin: 0, color: "var(--muted)" }}>Avis et notes après chaque trajet.</p>
+        </div></div>
+        <div className="gc-card"><div className="gc-cardBody">
+          <h3 style={{ marginTop: 0 }}>Communauté</h3>
+          <p style={{ margin: 0, color: "var(--muted)" }}>Badges éco et stats personnelles.</p>
+        </div></div>
       </section>
     </div>
   );

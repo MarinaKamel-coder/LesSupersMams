@@ -1,57 +1,57 @@
-import axios from 'axios';
-import { API_BASE_URL } from '../config';
-import type { User, DashboardData, UserStats, Trip, Vehicle } from '../types/user';
+import { API_BASE_URL } from "../config";
 
-// Configuration de base d'Axios
-const api = axios.create({
-  baseURL: `${API_BASE_URL}/api`,
-  headers: {
-    'Content-Type': 'application/json',
-  },
-});
+export class ApiError extends Error {
+	status: number;
+	body: unknown;
 
-// Intercepteur pour injecter le token JWT dans chaque requête
-api.interceptors.request.use((config) => {
-  const token = localStorage.getItem('token');
-  if (token && config.headers) {
-    config.headers.Authorization = `Bearer ${token}`;
-  }
-  return config;
-});
+	constructor(message: string, status: number, body: unknown) {
+		super(message);
+		this.name = "ApiError";
+		this.status = status;
+		this.body = body;
+	}
+}
 
-/**
- * Service pour les appels liés à l'utilisateur et au dashboard
- */
-export const userService = {
-  // Récupère toutes les données du dashboard (stats, trajets à venir, etc.)
-  getDashboardData: async (): Promise<DashboardData> => {
-    const { data } = await api.get('/users/dashboard');
-    return data.data;
-  },
-
-  // Récupère le profil complet de l'utilisateur
-  getProfile: async (): Promise<{ user: User; stats: UserStats }> => {
-    const { data } = await api.get('/users/profile');
-    return data.data;
-  },
-
-  // Met à jour les informations du profil
-  updateProfile: async (userData: Partial<User>): Promise<User> => {
-    const { data } = await api.put('/users/profile', userData);
-    return data.data;
-  },
-
-  // Récupère la liste des véhicules de l'utilisateur
-  getVehicles: async (): Promise<Vehicle[]> => {
-    const { data } = await api.get('/users/vehicles');
-    return data.data;
-  },
-
-  // Récupère les trajets à venir
-  getUpcomingTrips: async (): Promise<Trip[]> => {
-    const { data } = await api.get('/users/upcoming-trips');
-    return data.data;
-  }
+type ApiFetchOptions = {
+	method?: "GET" | "POST" | "PUT" | "PATCH" | "DELETE";
+	token?: string | null;
+	body?: unknown;
+	headers?: Record<string, string>;
 };
 
-export default api;
+export async function apiFetch<T>(path: string, options: ApiFetchOptions = {}): Promise<T> {
+	const url = path.startsWith("http") ? path : `${API_BASE_URL}${path}`;
+
+	const headers: Record<string, string> = {
+		Accept: "application/json",
+		...(options.body !== undefined ? { "Content-Type": "application/json" } : {}),
+		...(options.headers ?? {}),
+	};
+
+	if (options.token) {
+		headers.Authorization = `Bearer ${options.token}`;
+	}
+
+	const res = await fetch(url, {
+		method: options.method ?? "GET",
+		headers,
+		body: options.body !== undefined ? JSON.stringify(options.body) : undefined,
+	});
+
+	const contentType = res.headers.get("content-type") ?? "";
+	const isJson = contentType.includes("application/json");
+	const body = isJson ? await res.json().catch(() => null) : await res.text().catch(() => "");
+
+	if (!res.ok) {
+		const message = (() => {
+			if (body && typeof body === "object" && "message" in body) {
+				const maybeMessage = (body as { message?: unknown }).message;
+				if (typeof maybeMessage === "string") return maybeMessage;
+			}
+			return `Erreur API (${res.status})`;
+		})();
+		throw new ApiError(message, res.status, body);
+	}
+
+	return body as T;
+}

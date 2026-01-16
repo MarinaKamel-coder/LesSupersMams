@@ -1,5 +1,5 @@
 import type { Request, Response } from 'express';
-import { BookingStatus } from '../generated/prisma/client'; 
+import { BookingStatus } from '../generated/prisma/client';
 import prisma from '../prisma/prisma';
 import { EMISSION_FACTORS } from '../utils/co2';
 

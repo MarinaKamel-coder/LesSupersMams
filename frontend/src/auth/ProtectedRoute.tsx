@@ -1,10 +1,11 @@
-import { Navigate, Outlet } from 'react-router-dom';
-import { useAuth } from './AuthContext';
+import { Navigate, Outlet } from "react-router-dom";
+import { useAuth } from "./AuthContext";
 
-export const ProtectedRoute = () => {
-  const { user, isLoading } = useAuth();
+export function ProtectedRoute({ redirectTo = "/login" }: { redirectTo?: string }) {
+	const { token, isLoading } = useAuth();
 
-  if (isLoading) return <div>Chargement...</div>;
+	if (isLoading) return <p>Chargement...</p>;
+	if (!token) return <Navigate to={redirectTo} replace />;
 
-  return user ? <Outlet /> : <Navigate to="/login" replace />;
-};
+	return <Outlet />;
+}

@@ -1,8 +1,19 @@
 import { PrismaNeon } from '@prisma/adapter-neon';
-import { PrismaClient } from "../generated/prisma/client.js";
+import dotenv from "dotenv";
+
+import { PrismaClient } from "../generated/prisma/client";
+
+dotenv.config();
+
+const databaseUrl = process.env.DATABASE_URL;
+if (!databaseUrl) {
+  throw new Error(
+    "DATABASE_URL est manquant. Crée un fichier .env dans /backend avec DATABASE_URL=... (Postgres/Neon)."
+  );
+}
 // Créer le client Neon
 const adapter = new PrismaNeon({
-  connectionString: process.env.DATABASE_URL,
+  connectionString: databaseUrl,
 });
 
 // Créer le client Prisma avec l'adaptateur Neon
