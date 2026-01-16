@@ -17,6 +17,9 @@ export function AppLayout() {
               <>
                 <Link to="/dashboard" className="gc-link">Dashboard</Link>
                 <Link to="/create-trip" className="gc-link">Créer un trajet</Link>
+				{user?.role === "ADMIN" ? (
+					<Link to="/admin" className="gc-link">Administration</Link>
+				) : null}
                 <span style={{ opacity: 0.85 }}>
                   {user?.firstName ? `Bonjour, ${user.firstName}` : user?.email}
                 </span>

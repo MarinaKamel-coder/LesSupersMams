@@ -6,6 +6,7 @@ export type AuthUser = {
 	firstName?: string | null;
 	lastName?: string | null;
 	rating?: number | null;
+	role?: "USER" | "ADMIN" | null;
 };
 
 type AuthContextValue = {

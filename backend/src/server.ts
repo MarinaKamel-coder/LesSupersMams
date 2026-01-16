@@ -10,6 +10,7 @@ import vehicleRoutes from './routes/vehicles.routes';
 import bookingRoutes from './routes/booking.routes';
 import messageRoutes from './routes/message.routes';
 import reviewRoutes from './routes/review.routes';
+import adminRoutes from './routes/admin.routes';
 
 // Configuration
 dotenv.config();
@@ -29,6 +30,7 @@ app.use('/api/trips', tripRoutes);
 app.use('/api/bookings', bookingRoutes);
 app.use('/api/messages', messageRoutes);
 app.use('/api/reviews', reviewRoutes);
+app.use('/api/admin', adminRoutes);
 
 // --- Route de santé (Health Check) ---
 app.get('/', (req, res) => {
