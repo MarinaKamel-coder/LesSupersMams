@@ -1,0 +1,245 @@
+:root {
+  --bg: #f7faf8;
+  --surface: #ffffff;
+  --surface-2: #f1f5f3;
+  --text: #0f172a;
+  --muted: #64748b;
+  --border: #e2e8f0;
+  --primary: #16a34a;
+  --primary-700: #15803d;
+  --danger: #b91c1c;
+  --shadow: 0 8px 30px rgba(15, 23, 42, 0.08);
+
+  font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Arial, "Noto Sans", "Apple Color Emoji",
+    "Segoe UI Emoji";
+  line-height: 1.5;
+  font-weight: 400;
+  color: var(--text);
+  background: radial-gradient(1200px 400px at 20% 0%, rgba(22, 163, 74, 0.12), transparent 55%),
+    radial-gradient(900px 360px at 100% 20%, rgba(16, 185, 129, 0.12), transparent 55%),
+    var(--bg);
+
+  font-synthesis: none;
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body {
+  height: 100%;
+}
+
+body {
+  margin: 0;
+  min-width: 320px;
+}
+
+#root {
+  min-height: 100vh;
+}
+
+a {
+  color: inherit;
+  text-decoration: none;
+}
+
+a:hover {
+  text-decoration: underline;
+}
+
+button,
+input,
+select,
+textarea {
+  font: inherit;
+}
+
+button {
+  border: 1px solid var(--border);
+  background: var(--surface);
+  border-radius: 12px;
+  padding: 10px 14px;
+  cursor: pointer;
+  transition: transform 120ms ease, box-shadow 120ms ease, border-color 120ms ease;
+}
+
+button:hover {
+  border-color: rgba(22, 163, 74, 0.35);
+  box-shadow: 0 8px 20px rgba(22, 163, 74, 0.12);
+}
+
+button:active {
+  transform: translateY(1px);
+}
+
+button:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+  box-shadow: none;
+}
+
+input,
+select,
+textarea {
+  border: 1px solid var(--border);
+  background: var(--surface);
+  border-radius: 12px;
+  padding: 10px 12px;
+  outline: none;
+}
+
+input:focus,
+select:focus,
+textarea:focus {
+  border-color: rgba(22, 163, 74, 0.55);
+  box-shadow: 0 0 0 4px rgba(22, 163, 74, 0.12);
+}
+
+.gc-container {
+  width: min(1100px, 100%);
+  margin: 0 auto;
+  padding: 0 16px;
+}
+
+.gc-header {
+  position: sticky;
+  top: 0;
+  z-index: 10;
+  background: rgba(255, 255, 255, 0.7);
+  backdrop-filter: blur(10px);
+  border-bottom: 1px solid var(--border);
+}
+
+.gc-headerInner {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px 0;
+}
+
+.gc-brand {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  font-weight: 900;
+  letter-spacing: -0.02em;
+}
+
+.gc-pill {
+  font-size: 12px;
+  padding: 4px 10px;
+  border-radius: 999px;
+  border: 1px solid rgba(22, 163, 74, 0.25);
+  background: rgba(22, 163, 74, 0.08);
+  color: var(--primary-700);
+}
+
+.gc-nav {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+  flex-wrap: wrap;
+}
+
+.gc-link {
+  padding: 8px 10px;
+  border-radius: 10px;
+}
+
+.gc-link:hover {
+  background: rgba(15, 23, 42, 0.04);
+  text-decoration: none;
+}
+
+.gc-main {
+  padding: 24px 0 40px;
+}
+
+.gc-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  box-shadow: var(--shadow);
+}
+
+.gc-cardBody {
+  padding: 16px;
+}
+
+.gc-title {
+  margin: 0;
+  font-size: 28px;
+  letter-spacing: -0.02em;
+}
+
+.gc-subtitle {
+  margin: 6px 0 0;
+  color: var(--muted);
+}
+
+.gc-grid {
+  display: grid;
+  gap: 16px;
+}
+
+.gc-grid-2 {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.gc-grid-3 {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+@media (max-width: 860px) {
+  .gc-grid-2,
+  .gc-grid-3 {
+    grid-template-columns: 1fr;
+  }
+}
+
+.gc-hero {
+  padding: 18px;
+  border: 1px solid rgba(22, 163, 74, 0.18);
+  background: linear-gradient(135deg, rgba(22, 163, 74, 0.12), rgba(16, 185, 129, 0.06));
+  border-radius: 18px;
+}
+
+.gc-stat {
+  display: grid;
+  gap: 6px;
+  padding: 14px;
+  border-radius: 16px;
+  border: 1px solid var(--border);
+  background: linear-gradient(180deg, #fff, #fbfdfc);
+}
+
+.gc-statLabel {
+  font-size: 12px;
+  color: var(--muted);
+}
+
+.gc-statValue {
+  font-size: 26px;
+  font-weight: 900;
+}
+
+.gc-alert {
+  padding: 12px;
+  border-radius: 14px;
+  border: 1px solid rgba(185, 28, 28, 0.25);
+  background: rgba(185, 28, 28, 0.06);
+  color: var(--danger);
+}
+
+.gc-success {
+  padding: 12px;
+  border-radius: 14px;
+  border: 1px solid rgba(22, 163, 74, 0.25);
+  background: rgba(22, 163, 74, 0.06);
+  color: var(--primary-700);
+}
