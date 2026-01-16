@@ -5,6 +5,7 @@ import LoginPage from "./pages/LoginPage";
 import { ProtectedRoute } from "./auth/ProtectedRoute";
 import { DashboardPage } from "./pages/DashboardPage";
 import { CreateTripPage } from "./pages/CreateTripPage";
+import { AdministrationPage } from "./pages/AdministrationPage";
 
 export const router = createBrowserRouter([
     {
@@ -19,6 +20,7 @@ export const router = createBrowserRouter([
                             children: [
                                 { path: "/dashboard", element: <DashboardPage /> },
                                 { path: "/create-trip", element: <CreateTripPage /> },
+								{ path: "/admin", element: <AdministrationPage /> },
                             ],
                         },
             // {
