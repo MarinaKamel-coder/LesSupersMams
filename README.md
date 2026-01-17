@@ -1,4 +1,4 @@
-# 🚗 GreenCommute (LesSupersMams)
+# 🚗 GreenCommute
 
 **GreenCommute** est une application web full-stack de covoiturage écologique. Elle permet de mettre en relation des conducteurs proposant des trajets et des passagers cherchant à se déplacer de manière durable et économique.
 
