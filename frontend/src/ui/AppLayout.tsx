@@ -78,13 +78,17 @@ export function AppLayout() {
                 <Link to="/my-bookings" className="gc-link">Mes réservations</Link>
                 <Link to="/messages" className="gc-link">Messages</Link>
                 <Link to="/create-trip" className="gc-link">Créer un trajet</Link>
-				<Link to="/vehicles" className="gc-link">Véhicules</Link>
-				{user?.role === "ADMIN" ? (
-					<Link to="/admin" className="gc-link">Administration</Link>
-				) : null}
-                <span style={{ opacity: 0.85 }}>
+				        <Link to="/vehicles" className="gc-link">Véhicules</Link>
+				        {user?.role === "ADMIN" && (
+                <Link to="/admin" className="gc-link">Administration</Link>
+                )} 
+                <Link
+                  to="/my-profile"
+                  className="gc-link gc-user-name"
+                  style={{ fontWeight: 'bold', marginLeft: '10px' }}
+                >
                   {user?.firstName ? `Bonjour, ${user.firstName}` : user?.email}
-                </span>
+                </Link>                
                 <button type="button" onClick={logout}>
                   Déconnexion
                 </button>

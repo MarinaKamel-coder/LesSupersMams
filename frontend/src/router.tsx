@@ -12,6 +12,8 @@ import { MessagePage } from "./pages/MessagePage.tsx";
 import BookingPage from "./pages/BookingPage";
 import MyBookingsPage from "./pages/MyBookingsPage";
 import { TripDetailsPage } from "./pages/TripDetailsPage";
+import { ReviewPage } from "./pages/reviewPage";
+import {MyProfilePage} from "./pages/MyProfilePage";
 
 export const router = createBrowserRouter([
     {
@@ -33,7 +35,9 @@ export const router = createBrowserRouter([
                     { path: "/messages", element: <MessagePage /> },
                     { path: "/messages/:tripId", element: <MessagePage /> },
                     { path: "/my-bookings", element: <MyBookingsPage /> },
-                ],
+                    { path: "/reviews", element: <ReviewPage /> },
+                    { path: "/my-profile", element: <MyProfilePage /> },                   
+                ],                
             },
         ],
     },
