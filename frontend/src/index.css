@@ -301,3 +301,90 @@ textarea:focus {
   background: rgba(22, 163, 74, 0.06);
   color: var(--primary-700);
 }
+
+.gc-stepCard {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 18px;
+  box-shadow: var(--shadow);
+  padding: 18px;
+  display: grid;
+  gap: 10px;
+}
+
+.gc-stepCardGreen {
+  border-color: rgba(22, 163, 74, 0.35);
+}
+
+.gc-stepCardBlue {
+  border-color: rgba(59, 130, 246, 0.35);
+}
+
+.gc-stepIcon {
+  width: 44px;
+  height: 44px;
+  border-radius: 999px;
+  display: grid;
+  place-items: center;
+  font-size: 20px;
+  background: rgba(15, 23, 42, 0.04);
+  border: 1px solid rgba(15, 23, 42, 0.08);
+}
+
+.gc-stepTitle {
+  margin: 0;
+  font-size: 16px;
+}
+
+.gc-stepText {
+  margin: 0;
+  color: var(--muted);
+  font-size: 14px;
+  line-height: 1.55;
+}
+
+.gc-ctaBanner {
+  border-radius: 22px;
+  padding: 34px 18px;
+  box-shadow: var(--shadow);
+  background: linear-gradient(90deg, #0ea64b 0%, #0aa3a3 45%, #1363ff 100%);
+  color: #fff;
+  text-align: center;
+}
+
+.gc-ctaTitle {
+  margin: 0;
+  font-size: 34px;
+  letter-spacing: -0.02em;
+}
+
+.gc-ctaText {
+  margin: 10px auto 18px;
+  max-width: 760px;
+  opacity: 0.92;
+}
+
+.gc-ctaBtn {
+  border: none;
+  border-radius: 999px;
+  padding: 10px 18px;
+  font-weight: 800;
+  background: #fff;
+  color: #0ea64b;
+}
+
+.gc-ctaBtn:hover {
+  border: none;
+  box-shadow: 0 14px 30px rgba(0, 0, 0, 0.18);
+}
+
+.gc-ctaBtnGhost {
+  background: rgba(255, 255, 255, 0.16);
+  color: #fff;
+  border: 1px solid rgba(255, 255, 255, 0.32);
+}
+
+.gc-ctaBtnGhost:hover {
+  background: rgba(255, 255, 255, 0.2);
+  border-color: rgba(255, 255, 255, 0.5);
+}

@@ -231,6 +231,20 @@ const MyBookingsPage: React.FC = () => {
                   >
                     Voir trajet
                   </button>
+
+                  <button
+                    onClick={() => navigate(`/messages/${booking.trip.id}`)}
+                    style={{
+                      padding: '8px 16px',
+                      background: '#e8f5e9',
+                      border: '1px solid #2e7d32',
+                      color: '#2e7d32',
+                      borderRadius: '4px',
+                      cursor: 'pointer'
+                    }}
+                  >
+                    Messages
+                  </button>
                   
                   {(booking.status === 'PENDING' || booking.status === 'ACCEPTED') && (
                     <button

@@ -31,6 +31,7 @@ export const router = createBrowserRouter([
                     { path: "/admin", element: <AdministrationPage /> },
                     { path: "/vehicles", element: <VehiclesPage /> },
                     { path: "/messages", element: <MessagePage /> },
+                    { path: "/messages/:tripId", element: <MessagePage /> },
                     { path: "/my-bookings", element: <MyBookingsPage /> },
                 ],
             },

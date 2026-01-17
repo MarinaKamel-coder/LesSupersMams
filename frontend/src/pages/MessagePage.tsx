@@ -1,8 +1,9 @@
 import { useEffect, useMemo, useRef, useState } from "react";
-import { useParams } from "react-router-dom";
+import { useNavigate, useParams } from "react-router-dom";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { apiFetch } from "../services/api";
 import { useAuth } from "../auth/AuthContext";
+import { getSocket } from "../services/socket";
 import { Send } from "lucide-react";
 import type { ChatMessage } from "../types/user";
 import "../style/message.css";
@@ -13,7 +14,9 @@ import "../style/message.css";
 export function MessagePage() {
   const { tripId } = useParams();
   const { token } = useAuth();
+  const navigate = useNavigate();
   const [text, setText] = useState("");
+  const [tripIdInput, setTripIdInput] = useState("");
   const scrollRef = useRef<HTMLDivElement>(null);
   const queryClient = useQueryClient();
 
@@ -47,6 +50,32 @@ export function MessagePage() {
 
   const messages = messagesQuery.data ?? [];
 
+  useEffect(() => {
+    if (!token || !tripId) return;
+    const socket = getSocket(token);
+    if (!socket) return;
+
+    const numericTripId = Number(tripId);
+    if (!Number.isFinite(numericTripId)) return;
+
+    socket.emit("trip:join", numericTripId);
+
+    const onMessage = async (payload: unknown) => {
+      const payloadTripId =
+        payload && typeof payload === "object" && "tripId" in payload
+          ? Number((payload as { tripId?: unknown }).tripId)
+          : null;
+      if (payloadTripId !== numericTripId) return;
+      await queryClient.invalidateQueries({ queryKey: ["messages", tripId] });
+    };
+
+    socket.on("message:new", onMessage);
+    return () => {
+      socket.emit("trip:leave", numericTripId);
+      socket.off("message:new", onMessage);
+    };
+  }, [queryClient, token, tripId]);
+
   // Auto-scroll vers le bas quand un message arrive
   useEffect(() => {
     scrollRef.current?.scrollTo(0, scrollRef.current.scrollHeight);
@@ -76,6 +105,49 @@ export function MessagePage() {
   };
 
   if (!token) return <p>Connecte-toi pour accéder à la messagerie.</p>;
+
+  if (!tripId) {
+    return (
+      <div className="gc-card">
+        <div className="gc-cardBody" style={{ display: "grid", gap: 12 }}>
+          <h1 style={{ margin: 0 }}>Messagerie</h1>
+          <p style={{ margin: 0, color: "var(--muted)" }}>
+            Pour envoyer un message, ouvre d’abord un trajet (ex: depuis “Mes réservations” ou “Réserver”),
+            puis clique sur le bouton “Messages”.
+          </p>
+
+          <div style={{ display: "flex", gap: 10, flexWrap: "wrap" }}>
+            <button type="button" className="gc-btn gc-btnPrimary" onClick={() => navigate("/my-bookings")}>
+              Mes réservations
+            </button>
+            <button type="button" className="gc-btn gc-btnSecondary" onClick={() => navigate("/booking")}>
+              Réserver
+            </button>
+          </div>
+
+          <form
+            onSubmit={(e) => {
+              e.preventDefault();
+              const n = Number(tripIdInput);
+              if (!Number.isFinite(n) || n <= 0) return;
+              navigate(`/messages/${n}`);
+            }}
+            style={{ display: "flex", gap: 10, alignItems: "center", flexWrap: "wrap" }}
+          >
+            <input
+              inputMode="numeric"
+              placeholder="ID du trajet (ex: 12)"
+              value={tripIdInput}
+              onChange={(e) => setTripIdInput(e.target.value)}
+              style={{ maxWidth: 220 }}
+            />
+            <button type="submit">Ouvrir</button>
+          </form>
+        </div>
+      </div>
+    );
+  }
+
   if (messagesQuery.isLoading) return <p>Chargement…</p>;
   if (messagesQuery.isError) return <div className="gc-alert">Erreur chargement messages</div>;
 

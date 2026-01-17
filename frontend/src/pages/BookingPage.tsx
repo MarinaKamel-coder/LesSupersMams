@@ -1,7 +1,9 @@
 // src/pages/BookingPage.tsx
-import React, { useCallback, useEffect, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { useAuth } from '../auth/AuthContext';
+import { MapContainer, Marker, Polyline, Popup, TileLayer } from "react-leaflet";
+import { getCityCoords, getMidpoint } from "../utils/geo";
 
 // Services
 import { tripService } from '../services/trip.service.ts';
@@ -160,6 +162,30 @@ const BookingPage: React.FC = () => {
     });
   };
 
+  const mapTrips = useMemo(() => {
+    return trips
+      .map((t) => {
+        const from = getCityCoords(t.departureCity);
+        const to = getCityCoords(t.arrivalCity);
+        if (!from || !to) return null;
+        return {
+          trip: t,
+          from,
+          to,
+          mid: getMidpoint(from, to),
+        };
+      })
+      .filter(Boolean) as Array<{ trip: Trip; from: { lat: number; lng: number }; to: { lat: number; lng: number }; mid: { lat: number; lng: number } }>;
+  }, [trips]);
+
+  const mapCenter = useMemo(() => {
+    if (mapTrips.length > 0) {
+      return [mapTrips[0].mid.lat, mapTrips[0].mid.lng] as [number, number];
+    }
+    // Québec (par défaut)
+    return [46.8139, -71.2080] as [number, number];
+  }, [mapTrips]);
+
   return (
     <div style={{ padding: '20px', maxWidth: '1200px', margin: '0 auto' }}>
       {/* Titre */}
@@ -286,6 +312,43 @@ const BookingPage: React.FC = () => {
         </div>
       )}
 
+    {/* Carte (bonus) */}
+    {!loading && mapTrips.length > 0 ? (
+      <div style={{ marginBottom: 24 }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', gap: 12, flexWrap: 'wrap' }}>
+          <h2 style={{ margin: '0 0 10px 0' }}>Carte des trajets</h2>
+          <p style={{ margin: 0, color: '#666', fontSize: 13 }}>
+            Astuce: clique un marqueur pour ouvrir le trajet.
+          </p>
+        </div>
+        <div style={{ border: '1px solid #ddd', borderRadius: 12, overflow: 'hidden' }}>
+          <MapContainer center={mapCenter} zoom={7} style={{ height: 360, width: '100%' }} scrollWheelZoom>
+            <TileLayer
+              attribution='&copy; OpenStreetMap contributors'
+              url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+            />
+            {mapTrips.map(({ trip, from, to }) => (
+              <React.Fragment key={trip.id}>
+                <Polyline positions={[[from.lat, from.lng], [to.lat, to.lng]]} pathOptions={{ color: '#16a34a' }} />
+                <Marker position={[from.lat, from.lng]}>
+                  <Popup>
+                    <div style={{ display: 'grid', gap: 6 }}>
+                      <div style={{ fontWeight: 700 }}>{trip.departureCity} → {trip.arrivalCity}</div>
+                      <div style={{ color: '#666', fontSize: 13 }}>🕐 {formatDate(trip.departureTime)}</div>
+                      <button type="button" onClick={() => navigate(`/trip/${trip.id}`)}>
+                        Voir détails
+                      </button>
+                    </div>
+                </Popup>
+              </Marker>
+              <Marker position={[to.lat, to.lng]} />
+            </React.Fragment>
+            ))}
+          </MapContainer>
+        </div>
+      </div>
+    ) : null}
+
       {/* Liste des trajets */}
       {loading ? (
         <div style={{ textAlign: 'center', padding: '40px' }}>
@@ -379,20 +442,42 @@ const BookingPage: React.FC = () => {
                   borderTop: '1px solid #eee',
                   paddingTop: '15px'
                 }}>
-                  <button
-                    onClick={() => navigate(`/trip/${trip.id}`)}
-                    style={{
-                      padding: '8px 16px',
-                      background: 'transparent',
-                      border: '1px solid #1976d2',
-                      color: '#1976d2',
-                      borderRadius: '4px',
-                      cursor: 'pointer'
-                    }}
-                  >
-                    Voir les détails
-                  </button>
-                  
+                  <div style={{ display: 'flex', gap: '10px', flexWrap: 'wrap' }}>
+                    <button
+                      onClick={() => navigate(`/trip/${trip.id}`)}
+                      style={{
+                        padding: '8px 16px',
+                        background: 'transparent',
+                        border: '1px solid #1976d2',
+                        color: '#1976d2',
+                        borderRadius: '4px',
+                        cursor: 'pointer'
+                      }}
+                    >
+                      Voir les détails
+                    </button>
+
+                    <button
+                      onClick={() => {
+                        if (!token) {
+                          navigate('/login');
+                          return;
+                        }
+                        navigate(`/messages/${trip.id}`);
+                      }}
+                      style={{
+                        padding: '8px 16px',
+                        background: '#e8f5e9',
+                        border: '1px solid #2e7d32',
+                        color: '#2e7d32',
+                        borderRadius: '4px',
+                        cursor: 'pointer'
+                      }}
+                    >
+                      Messages
+                    </button>
+                  </div>
+
                   <button
                     onClick={() => handleBookTrip(trip.id)}
                     disabled={trip.availableSeats <= 0}

@@ -172,6 +172,16 @@ export function TripDetailsPage() {
 					Retour
 				</button>
 
+				{token ? (
+					<Link className="gc-btn gc-btnSecondary" to={`/messages/${trip.id}`}>
+						Messages
+					</Link>
+				) : (
+					<Link className="gc-link" to="/login">
+						Se connecter pour envoyer un message
+					</Link>
+				)}
+
 				<button
 					type="button"
 					disabled={!canBook || bookMutation.isPending}

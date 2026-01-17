@@ -111,19 +111,57 @@ export function HomePage() {
         </div>
       </section>
 
-      <section className="gc-grid gc-grid-3">
-        <div className="gc-card"><div className="gc-cardBody">
-          <h3 style={{ marginTop: 0 }}>Impact</h3>
-          <p style={{ margin: 0, color: "var(--muted)" }}>Chaque trajet partagé divise les émissions par passager.</p>
-        </div></div>
-        <div className="gc-card"><div className="gc-cardBody">
-          <h3 style={{ marginTop: 0 }}>Confiance</h3>
-          <p style={{ margin: 0, color: "var(--muted)" }}>Avis et notes après chaque trajet.</p>
-        </div></div>
-        <div className="gc-card"><div className="gc-cardBody">
-          <h3 style={{ marginTop: 0 }}>Communauté</h3>
-          <p style={{ margin: 0, color: "var(--muted)" }}>Badges éco et stats personnelles.</p>
-        </div></div>
+      <section className="gc-grid" style={{ gap: 12 }}>
+        <h2 style={{ margin: 0 }}>Comment ça marche</h2>
+        <div className="gc-grid gc-grid-3" style={{ gap: 12 }}>
+          <div className="gc-stepCard gc-stepCardGreen">
+            <div className="gc-stepIcon">🔍</div>
+            <h3 className="gc-stepTitle">1. Recherchez un trajet</h3>
+            <p className="gc-stepText">
+              Trouvez facilement un covoiturage qui correspond à votre itinéraire et vos horaires.
+              Filtrez par ville, date et nombre de places.
+            </p>
+          </div>
+
+          <div className="gc-stepCard gc-stepCardBlue">
+            <div className="gc-stepIcon">👥</div>
+            <h3 className="gc-stepTitle">2. Réservez ou Publiez</h3>
+            <p className="gc-stepText">
+              Réservez des places pour voyager ou publiez votre propre trajet pour partager vos frais
+              et votre empreinte carbone.
+            </p>
+          </div>
+
+          <div className="gc-stepCard gc-stepCardGreen">
+            <div className="gc-stepIcon">🍃</div>
+            <h3 className="gc-stepTitle">3. Sauvez la planète</h3>
+            <p className="gc-stepText">
+              Suivez votre impact écologique en temps réel. Chaque trajet partagé contribue à réduire
+              les émissions de CO₂.
+            </p>
+          </div>
+        </div>
+      </section>
+
+      <section className="gc-ctaBanner">
+        <h2 className="gc-ctaTitle">Prêt à faire la différence ?</h2>
+        <p className="gc-ctaText">
+          Rejoignez la communauté GreenCommute et commencez à réduire votre empreinte carbone dès aujourd’hui.
+        </p>
+        {user ? (
+          <div style={{ display: "flex", gap: 10, justifyContent: "center", flexWrap: "wrap" }}>
+            <button className="gc-ctaBtn" type="button" onClick={() => navigate("/booking")}>
+              Rechercher / Réserver
+            </button>
+            <button className="gc-ctaBtn gc-ctaBtnGhost" type="button" onClick={() => navigate("/create-trip")}>
+              Publier un trajet
+            </button>
+          </div>
+        ) : (
+          <button className="gc-ctaBtn" type="button" onClick={() => navigate("/login")}>
+            Créer mon compte gratuitement
+          </button>
+        )}
       </section>
     </div>
   );

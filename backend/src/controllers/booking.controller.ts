@@ -1,5 +1,6 @@
 import type { Request, Response } from "express";
 import  prisma  from "../prisma/prisma";
+import { emitToUser } from "../realtime/socket";
 
 /** ===== reservations ===== */
 export async function requestBooking(req: Request, res: Response) {
@@ -53,7 +54,35 @@ export async function requestBooking(req: Request, res: Response) {
         tripId,
         passengerId: userId,
       },
+      include: {
+        trip: {
+          select: {
+            id: true,
+            driverId: true,
+            departureCity: true,
+            arrivalCity: true,
+            departureTime: true,
+          },
+        },
+      },
     });
+
+		emitToUser(Number(trip.driverId), "booking:created", {
+			bookingId: booking.id,
+			tripId: booking.trip.id,
+			passengerId: Number(userId),
+			departureCity: booking.trip.departureCity,
+			arrivalCity: booking.trip.arrivalCity,
+			departureTime: booking.trip.departureTime,
+		});
+		emitToUser(Number(userId), "booking:created", {
+			bookingId: booking.id,
+			tripId: booking.trip.id,
+			status: booking.status,
+			departureCity: booking.trip.departureCity,
+			arrivalCity: booking.trip.arrivalCity,
+			departureTime: booking.trip.departureTime,
+		});
 
     return res.status(201).json({ booking });
   } catch (error) {
@@ -119,6 +148,17 @@ if (
         },
       });
     }
+
+		emitToUser(Number(booking.passengerId), "booking:status", {
+			bookingId: updatedBooking.id,
+			tripId: booking.tripId,
+			status: updatedBooking.status,
+		});
+		emitToUser(Number(booking.trip.driverId), "booking:status", {
+			bookingId: updatedBooking.id,
+			tripId: booking.tripId,
+			status: updatedBooking.status,
+		});
 
     return res.json({ booking: updatedBooking });
   } catch (error) {
@@ -210,6 +250,17 @@ export async function cancelBooking(req: Request, res: Response) {
         data: { availableSeats: { increment: 1 } },
       });
     }
+
+		emitToUser(Number(booking.trip.driverId), "booking:status", {
+			bookingId: updatedBooking.id,
+			tripId: booking.tripId,
+			status: updatedBooking.status,
+		});
+		emitToUser(Number(booking.passengerId), "booking:status", {
+			bookingId: updatedBooking.id,
+			tripId: booking.tripId,
+			status: updatedBooking.status,
+		});
 
     return res.json({ booking: updatedBooking });
   } catch (error) {
