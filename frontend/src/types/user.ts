@@ -64,3 +64,18 @@ export interface DashboardData {
   leaderboardPosition: number;
   badges: string[];
 }
+
+export interface ChatMessage {
+  id: number;
+  content: string;
+  tripId: number;
+  senderId: number;
+  sentAt: string;
+  isRead?: boolean;
+  sender: {
+    id?: number;
+    firstName: string;
+    lastName?: string | null;
+    avatarUrl?: string | null;
+  };
+}

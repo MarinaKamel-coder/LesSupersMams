@@ -25,7 +25,11 @@ export const getTrips = async (req: Request, res: Response) => {
         const filters = {
             departure: req.query.departure as string,
             arrival: req.query.arrival as string,
-            date: req.query.date as string
+            date: req.query.date as string,
+			timeFrom: req.query.timeFrom as string,
+			timeTo: req.query.timeTo as string,
+			priceMax: req.query.priceMax as string,
+			seats: (req.query.seats as string) ?? (req.query.passengers as string)
         };
 
         const trips = await tripService.getAllTripsService(filters);

@@ -1,59 +1,37 @@
-import { API_BASE_URL } from "../config";
+import type { AuthUser } from "../auth/AuthContext";
+import { apiFetch } from "./api";
 
-export type AuthUser = {
-    id: string;
-    email: string;
-    role?: string;
-    firstName?: string;
-    lastName?: string;
+export type LoginInput = {
+	email: string;
+	password: string;
+};
+
+export type RegisterInput = {
+	email: string;
+	password: string;
+	firstName: string;
+	lastName: string;
 };
 
 export type AuthResponse = {
-    token: string;
-    user: AuthUser;    
+	token: string;
+	user: AuthUser;
 };
 
-const API_BASE = `${API_BASE_URL}/api`;  
-
-async function request<T>(path: string, options: RequestInit): Promise<T> {
-    const res = await fetch(`${API_BASE}${path}`, {
-      headers: {
-        "Content-Type": "application/json",
-        ...(options.headers ?? {}), 
-      }, 
-      ...options, 
-    });
-
-    const isJson = (res.headers.get("content-type") ?? "").includes("application/Json");
-    const data = isJson ? await res.json(): await res.text();
-
-    if (!res.ok) {
-        // convention: {message: string} cote backend
-        const message = 
-        typeof data === "object" && data && "message" in data
-            ? (data as any).message
-            : `Erreur (${res.status})`;
-        throw new Error(message);
-    }
-
-    return data as T;    
+export async function login(input: LoginInput): Promise<AuthResponse> {
+	return apiFetch<AuthResponse>("/api/auth/login", {
+		method: "POST",
+		body: input,
+	});
 }
 
-export function login(payload: {email: string; password: string}) {
-    return request<AuthResponse>("../services/login", {
-        method: "POST", 
-        body: JSON.stringify(payload), 
-    });
-}
+// Le backend renvoie un token seulement au login.
+// Pour simplifier le frontend, on enchaine register -> login.
+export async function register(input: RegisterInput): Promise<AuthResponse> {
+	await apiFetch("/api/auth/register", {
+		method: "POST",
+		body: input,
+	});
 
-export function register(payload: {
-    email: string;
-    password: string;
-    firstName?: string;
-    lastName?: string;
-}) {
-    return request<AuthResponse>("../services/login", {
-        method: "POST", 
-        body: JSON.stringify(payload), 
-    });
+	return login({ email: input.email, password: input.password });
 }

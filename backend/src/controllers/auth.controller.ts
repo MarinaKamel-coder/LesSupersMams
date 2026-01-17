@@ -52,7 +52,7 @@ export const login = async (req: Request, res: Response) =>{
     if(!motDePasseValide) return res.status(400).json({message: 'Mot de passe incorrect !'});
 
     const token = jwt.sign(
-        {sub: user.id, email: user.email},
+        { sub: user.id, email: user.email, role: user.role },
         process.env.JWT_SECRET as string,
         {expiresIn: '1h'}
     )
@@ -65,7 +65,8 @@ export const login = async (req: Request, res: Response) =>{
             email: user.email,
             firstName: user.firstName,
             lastName: user.lastName,
-            rating: user.rating
+            rating: user.rating,
+            role: user.role
         }
     })
 }

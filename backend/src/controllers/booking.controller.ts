@@ -1,5 +1,6 @@
 import type { Request, Response } from "express";
 import  prisma  from "../prisma/prisma";
+import { emitToUser } from "../realtime/socket";
 
 /** ===== reservations ===== */
 export async function requestBooking(req: Request, res: Response) {
@@ -53,7 +54,35 @@ export async function requestBooking(req: Request, res: Response) {
         tripId,
         passengerId: userId,
       },
+      include: {
+        trip: {
+          select: {
+            id: true,
+            driverId: true,
+            departureCity: true,
+            arrivalCity: true,
+            departureTime: true,
+          },
+        },
+      },
     });
+
+		emitToUser(Number(trip.driverId), "booking:created", {
+			bookingId: booking.id,
+			tripId: booking.trip.id,
+			passengerId: Number(userId),
+			departureCity: booking.trip.departureCity,
+			arrivalCity: booking.trip.arrivalCity,
+			departureTime: booking.trip.departureTime,
+		});
+		emitToUser(Number(userId), "booking:created", {
+			bookingId: booking.id,
+			tripId: booking.trip.id,
+			status: booking.status,
+			departureCity: booking.trip.departureCity,
+			arrivalCity: booking.trip.arrivalCity,
+			departureTime: booking.trip.departureTime,
+		});
 
     return res.status(201).json({ booking });
   } catch (error) {
@@ -120,6 +149,17 @@ if (
       });
     }
 
+		emitToUser(Number(booking.passengerId), "booking:status", {
+			bookingId: updatedBooking.id,
+			tripId: booking.tripId,
+			status: updatedBooking.status,
+		});
+		emitToUser(Number(booking.trip.driverId), "booking:status", {
+			bookingId: updatedBooking.id,
+			tripId: booking.tripId,
+			status: updatedBooking.status,
+		});
+
     return res.json({ booking: updatedBooking });
   } catch (error) {
     console.error(error);
@@ -153,6 +193,118 @@ export async function getMyBookings(req: Request, res: Response) {
       orderBy: {
         createdAt: "desc",
       },
+    });
+
+    return res.json({ bookings });
+  } catch (error) {
+    console.error(error);
+    return res.status(500).json({ message: "Internal server error" });
+  }
+}
+
+/**
+ * == Annuler une réservation (passager) ==
+ * DELETE /bookings/:bookingId
+ */
+export async function cancelBooking(req: Request, res: Response) {
+  try {
+    const userId = req.user?.sub;
+    const bookingId = Number(req.params.bookingId);
+
+    if (!userId) {
+      return res.status(401).json({ message: "Unauthorized" });
+    }
+    if (!bookingId || Number.isNaN(bookingId)) {
+      return res.status(400).json({ message: "ID invalide" });
+    }
+
+    const booking = await prisma.booking.findUnique({
+      where: { id: bookingId },
+      include: { trip: true },
+    });
+
+    if (!booking) {
+      return res.status(404).json({ message: "Booking not found" });
+    }
+
+    if (booking.passengerId !== userId) {
+      return res.status(403).json({ message: "Action non autorisée." });
+    }
+
+    if (booking.status === "CANCELLED") {
+      return res.status(400).json({ message: "Cette réservation est déjà annulée." });
+    }
+    if (booking.status === "REJECTED") {
+      return res.status(400).json({ message: "Cette réservation a été refusée." });
+    }
+
+    const updatedBooking = await prisma.booking.update({
+      where: { id: bookingId },
+      data: { status: "CANCELLED" },
+    });
+
+    // Si la réservation était acceptée, libérer une place.
+    if (booking.status === "ACCEPTED") {
+      await prisma.trip.update({
+        where: { id: booking.tripId },
+        data: { availableSeats: { increment: 1 } },
+      });
+    }
+
+		emitToUser(Number(booking.trip.driverId), "booking:status", {
+			bookingId: updatedBooking.id,
+			tripId: booking.tripId,
+			status: updatedBooking.status,
+		});
+		emitToUser(Number(booking.passengerId), "booking:status", {
+			bookingId: updatedBooking.id,
+			tripId: booking.tripId,
+			status: updatedBooking.status,
+		});
+
+    return res.json({ booking: updatedBooking });
+  } catch (error) {
+    console.error(error);
+    return res.status(500).json({ message: "Internal server error" });
+  }
+}
+
+/**
+ * == Réservations d'un trajet (conducteur) ==
+ * GET /bookings/trip/:tripId
+ */
+export async function getTripBookingsForDriver(req: Request, res: Response) {
+  try {
+    const userId = req.user?.sub;
+    const tripId = Number(req.params.tripId);
+
+    if (!userId) {
+      return res.status(401).json({ message: "Unauthorized" });
+    }
+    if (!tripId || Number.isNaN(tripId)) {
+      return res.status(400).json({ message: "ID trajet invalide" });
+    }
+
+    const trip = await prisma.trip.findUnique({
+      where: { id: tripId },
+      select: { id: true, driverId: true },
+    });
+
+    if (!trip) {
+      return res.status(404).json({ message: "Trip not found" });
+    }
+    if (trip.driverId !== userId) {
+      return res.status(403).json({ message: "Action non autorisée." });
+    }
+
+    const bookings = await prisma.booking.findMany({
+      where: { tripId },
+      include: {
+        passenger: {
+          select: { id: true, firstName: true, lastName: true, email: true, rating: true },
+        },
+      },
+      orderBy: { createdAt: "desc" },
     });
 
     return res.json({ bookings });
