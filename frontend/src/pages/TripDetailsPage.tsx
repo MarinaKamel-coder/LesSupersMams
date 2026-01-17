@@ -37,6 +37,19 @@ type TripDetails = {
 	};
 };
 
+type TripBooking = {
+	id: number;
+	status: "PENDING" | "ACCEPTED" | "REJECTED" | "CANCELLED";
+	createdAt: string;
+	passenger: {
+		id: number;
+		firstName: string;
+		lastName: string;
+		email: string;
+		rating: number;
+	};
+};
+
 function formatDateTime(value: string) {
 	return new Date(value).toLocaleString("fr-CA", {
 		weekday: "short",
@@ -60,7 +73,7 @@ export function TripDetailsPage() {
 	const { id } = useParams<{ id: string }>();
 	const navigate = useNavigate();
 	const queryClient = useQueryClient();
-	const { token, user } = useAuth();
+	const { token } = useAuth();
 
 	const tripId = useMemo(() => {
 		if (!id) return null;
@@ -89,6 +102,50 @@ export function TripDetailsPage() {
 		},
 	});
 
+	const currentUserId = useMemo(() => {
+		if (!token) return null;
+		try {
+			const payloadPart = token.split(".")[1];
+			if (!payloadPart) return null;
+			const base64 = payloadPart.replace(/-/g, "+").replace(/_/g, "/");
+			const padded = base64.padEnd(Math.ceil(base64.length / 4) * 4, "=");
+			const json = atob(padded);
+			const payload = JSON.parse(json) as { sub?: number | string };
+			const sub = payload.sub;
+			if (typeof sub === "number") return sub;
+			if (typeof sub === "string") return Number(sub);
+			return null;
+		} catch {
+			return null;
+		}
+	}, [token]);
+
+	const driverId = tripQuery.data?.driverId;
+	const isDriver = currentUserId != null && driverId != null && currentUserId === driverId;
+
+	const tripBookingsQuery = useQuery({
+		queryKey: ["tripBookings", tripId],
+		enabled: Boolean(token && isDriver && tripId != null),
+		queryFn: async () => {
+			if (!token) throw new Error("Non authentifié");
+			if (!tripId) throw new Error("Trajet invalide");
+			return bookingService.getTripBookings(tripId, token) as Promise<TripBooking[]>;
+		},
+	});
+
+	const bookingStatusMutation = useMutation({
+		mutationFn: async (input: { bookingId: number; status: "ACCEPTED" | "REJECTED" }) => {
+			if (!token) throw new Error("Non authentifié");
+			return bookingService.updateBookingStatus(input.bookingId, input.status, token);
+		},
+		onSuccess: async () => {
+			if (tripId != null) {
+				await queryClient.invalidateQueries({ queryKey: ["tripBookings", tripId] });
+				await queryClient.invalidateQueries({ queryKey: ["trip", tripId] });
+			}
+		},
+	});
+
 	if (tripId == null) {
 		return <div className="gc-alert">ID de trajet invalide.</div>;
 	}
@@ -107,7 +164,6 @@ export function TripDetailsPage() {
 		return <div className="gc-alert">Trajet introuvable.</div>;
 	}
 
-	const isDriver = Boolean(user && (user as unknown as { id?: number }).id === trip.driverId);
 	const canBook = trip.availableSeats > 0 && !isDriver;
 
 	return (
@@ -162,6 +218,88 @@ export function TripDetailsPage() {
 					) : null}
 				</div>
 			</section>
+
+			{isDriver ? (
+				<section className="gc-card">
+					<div className="gc-cardBody" style={{ display: "grid", gap: 10 }}>
+						<h2 style={{ marginTop: 0, marginBottom: 0 }}>Demandes de réservation</h2>
+
+						{!token ? (
+							<p style={{ margin: 0 }}>Connecte-toi pour gérer les réservations.</p>
+						) : tripBookingsQuery.isLoading ? (
+							<p style={{ margin: 0 }}>Chargement…</p>
+						) : tripBookingsQuery.isError ? (
+							<div className="gc-alert">
+								{getErrorMessage(tripBookingsQuery.error, "Erreur chargement réservations")}
+							</div>
+						) : (tripBookingsQuery.data?.length ?? 0) === 0 ? (
+							<p style={{ margin: 0, color: "var(--muted)" }}>Aucune réservation pour ce trajet.</p>
+						) : (
+							<div style={{ display: "grid", gap: 10 }}>
+								{(tripBookingsQuery.data ?? []).map((b) => {
+									const fullName = `${b.passenger.firstName} ${b.passenger.lastName}`.trim();
+									const canDecide = b.status === "PENDING";
+									return (
+										<div
+											key={b.id}
+											style={{
+												border: "1px solid var(--border)",
+												borderRadius: 10,
+												padding: 12,
+												background: "var(--surface)",
+												display: "flex",
+												justifyContent: "space-between",
+												gap: 12,
+												alignItems: "center",
+												flexWrap: "wrap",
+											}}
+										>
+											<div>
+												<div style={{ fontWeight: 800 }}>{fullName || `#${b.passenger.id}`}</div>
+												<div style={{ fontSize: 13, color: "var(--muted)" }}>{b.passenger.email}</div>
+												<div style={{ fontSize: 13, color: "var(--muted)" }}>
+													Statut: <b>{b.status}</b>
+												</div>
+											</div>
+
+											<div style={{ display: "flex", gap: 10, alignItems: "center" }}>
+												{canDecide ? (
+													<>
+														<button
+															disabled={bookingStatusMutation.isPending}
+															onClick={() => bookingStatusMutation.mutate({ bookingId: b.id, status: "ACCEPTED" })}
+															style={{ background: "#2e7d32", color: "white", border: "none" }}
+														>
+															Accepter
+														</button>
+														<button
+															disabled={bookingStatusMutation.isPending}
+															onClick={() => bookingStatusMutation.mutate({ bookingId: b.id, status: "REJECTED" })}
+															style={{ background: "#c62828", color: "white", border: "none" }}
+														>
+															Refuser
+														</button>
+													</>
+												) : (
+													<span style={{ fontSize: 13, color: "var(--muted)" }}>
+														Décision déjà prise
+													</span>
+												)}
+
+												{bookingStatusMutation.isError ? (
+													<div className="gc-alert" style={{ marginLeft: 10 }}>
+														{getErrorMessage(bookingStatusMutation.error, "Erreur mise à jour")}
+													</div>
+												) : null}
+											</div>
+										</div>
+									);
+								})}
+							</div>
+						)}
+					</div>
+				</section>
+			) : null}
 
 			<section style={{ display: "flex", gap: 10, flexWrap: "wrap" }}>
 				<button

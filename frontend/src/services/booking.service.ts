@@ -25,4 +25,21 @@ export const bookingService = {
 			token,
 		});
 	},
+
+	async getTripBookings(tripId: number, token: string) {
+		// Backend: GET /api/bookings/trip/:tripId -> { bookings }
+		const res = await apiFetch<{ bookings: unknown[] }>(`/api/bookings/trip/${tripId}`, {
+			token,
+		});
+		return res.bookings;
+	},
+
+	async updateBookingStatus(bookingId: number, status: "ACCEPTED" | "REJECTED", token: string) {
+		// Backend: PATCH /api/bookings/:bookingId/status { status }
+		return apiFetch<{ booking: unknown }>(`/api/bookings/${bookingId}/status`, {
+			method: "PATCH",
+			token,
+			body: { status },
+		});
+	},
 };

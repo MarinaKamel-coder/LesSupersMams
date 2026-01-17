@@ -43,6 +43,9 @@ const BookingPage: React.FC = () => {
   const [departureCity, setDepartureCity] = useState('');
   const [arrivalCity, setArrivalCity] = useState('');
   const [selectedDate, setSelectedDate] = useState('');
+	const [timeFrom, setTimeFrom] = useState('');
+	const [priceMax, setPriceMax] = useState('');
+	const [minSeats, setMinSeats] = useState('1');
   
   /**
    * Charge les trajets
@@ -60,17 +63,26 @@ const BookingPage: React.FC = () => {
 		departureCity?: string;
 		arrivalCity?: string;
 		selectedDate?: string;
+    timeFrom?: string;
+    priceMax?: string;
+    minSeats?: string;
 	}) => {
     try {
       setLoading(true);
 			const nextDepartureCity = overrides?.departureCity ?? departureCity;
 			const nextArrivalCity = overrides?.arrivalCity ?? arrivalCity;
 			const nextSelectedDate = overrides?.selectedDate ?? selectedDate;
+      const nextTimeFrom = overrides?.timeFrom ?? timeFrom;
+      const nextPriceMax = overrides?.priceMax ?? priceMax;
+      const nextMinSeats = overrides?.minSeats ?? minSeats;
 
       const data = await tripService.searchTrips({
         departureCity: nextDepartureCity,
         arrivalCity: nextArrivalCity,
-        date: nextSelectedDate ? new Date(nextSelectedDate) : undefined
+      date: nextSelectedDate ? new Date(nextSelectedDate) : undefined,
+      timeFrom: nextTimeFrom || undefined,
+      priceMax: nextPriceMax ? Number(nextPriceMax) : undefined,
+      seats: nextMinSeats ? Number(nextMinSeats) : undefined,
       });
       setTrips(data as Trip[]);
     } catch (err: unknown) {
@@ -91,13 +103,19 @@ const BookingPage: React.FC = () => {
     const dep = params.get("departure") ?? "";
     const arr = params.get("arrival") ?? "";
     const date = params.get("date") ?? "";
+		const tFrom = params.get("timeFrom") ?? "";
+		const pMax = params.get("priceMax") ?? "";
+		const seats = params.get("seats") ?? "";
 
-    if (!dep && !arr && !date) return;
+    if (!dep && !arr && !date && !tFrom && !pMax && !seats) return;
 
     setDepartureCity(dep);
     setArrivalCity(arr);
     setSelectedDate(date);
-    void loadTrips({ departureCity: dep, arrivalCity: arr, selectedDate: date });
+		setTimeFrom(tFrom);
+		setPriceMax(pMax);
+		if (seats) setMinSeats(seats);
+    void loadTrips({ departureCity: dep, arrivalCity: arr, selectedDate: date, timeFrom: tFrom, priceMax: pMax, minSeats: seats || minSeats });
     // On veut exécuter uniquement quand l'URL change
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [location.search]);
@@ -117,7 +135,10 @@ const BookingPage: React.FC = () => {
     setDepartureCity('');
     setArrivalCity('');
     setSelectedDate('');
-		void loadTrips({ departureCity: '', arrivalCity: '', selectedDate: '' });
+		setTimeFrom('');
+		setPriceMax('');
+		setMinSeats('1');
+		void loadTrips({ departureCity: '', arrivalCity: '', selectedDate: '', timeFrom: '', priceMax: '', minSeats: '1' });
   };
 
   /**
@@ -238,6 +259,49 @@ const BookingPage: React.FC = () => {
                 borderRadius: '4px'
               }}
             />
+
+        <input
+          type="time"
+          value={timeFrom}
+          onChange={(e) => setTimeFrom(e.target.value)}
+          title="Heure minimale (utilisée surtout avec une date)"
+          style={{
+            padding: '10px',
+            border: '1px solid #ddd',
+            borderRadius: '4px'
+          }}
+        />
+
+        <input
+          type="number"
+          min={0}
+          step={0.5}
+          placeholder="Prix max ($)"
+          value={priceMax}
+          onChange={(e) => setPriceMax(e.target.value)}
+          style={{
+            padding: '10px',
+            width: '140px',
+            border: '1px solid #ddd',
+            borderRadius: '4px'
+          }}
+        />
+
+        <input
+          type="number"
+          min={1}
+          step={1}
+          title="Nombre de places minimum"
+          placeholder="Places"
+          value={minSeats}
+          onChange={(e) => setMinSeats(e.target.value)}
+          style={{
+            padding: '10px',
+            width: '110px',
+            border: '1px solid #ddd',
+            borderRadius: '4px'
+          }}
+        />
           </div>
           
           <div style={{ display: 'flex', gap: '10px' }}>

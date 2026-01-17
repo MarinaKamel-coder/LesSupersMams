@@ -15,6 +15,7 @@ interface Booking {
     departureTime: string;
     pricePerSeat: number;
     driver: {
+      id: number;
       firstName: string;
       lastName: string;
     };
@@ -99,6 +100,11 @@ const MyBookingsPage: React.FC = () => {
       hour: '2-digit',
       minute: '2-digit'
     });
+  };
+
+  const isPastTrip = (departureTime: string) => {
+    const t = new Date(departureTime).getTime();
+    return Number.isFinite(t) && t < Date.now();
   };
 
   if (!user) {
@@ -245,6 +251,49 @@ const MyBookingsPage: React.FC = () => {
                   >
                     Messages
                   </button>
+
+                  {(() => {
+                    const past = isPastTrip(booking.trip.departureTime);
+                    const canReview = booking.status === 'ACCEPTED' && past;
+
+                    const label = canReview
+                      ? 'Laisser un avis'
+                      : booking.status !== 'ACCEPTED'
+                        ? 'Laisser un avis (après acceptation)'
+                        : 'Laisser un avis (après le trajet)';
+
+                    return (
+                      <button
+                        type="button"
+                        disabled={!canReview}
+                        title={
+                          canReview
+                            ? 'Ouvrir le formulaire d’avis'
+                            : booking.status !== 'ACCEPTED'
+                              ? 'Disponible une fois la réservation acceptée'
+                              : 'Disponible une fois le trajet terminé'
+                        }
+                        onClick={() => {
+                          if (!canReview) return;
+                          const params = new URLSearchParams();
+                          params.set('tripId', String(booking.trip.id));
+                          params.set('revieweeId', String(booking.trip.driver.id));
+                          navigate(`/reviews?${params.toString()}`);
+                        }}
+                        style={{
+                          padding: '8px 16px',
+                          background: canReview ? '#fff3e0' : '#fafafa',
+                          border: '1px solid ' + (canReview ? '#ef6c00' : '#ddd'),
+                          color: canReview ? '#ef6c00' : '#999',
+                          borderRadius: '4px',
+                          cursor: canReview ? 'pointer' : 'not-allowed',
+                          opacity: canReview ? 1 : 0.85
+                        }}
+                      >
+                        {label}
+                      </button>
+                    );
+                  })()}
                   
                   {(booking.status === 'PENDING' || booking.status === 'ACCEPTED') && (
                     <button

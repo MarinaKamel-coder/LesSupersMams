@@ -268,3 +268,48 @@ export async function cancelBooking(req: Request, res: Response) {
     return res.status(500).json({ message: "Internal server error" });
   }
 }
+
+/**
+ * == Réservations d'un trajet (conducteur) ==
+ * GET /bookings/trip/:tripId
+ */
+export async function getTripBookingsForDriver(req: Request, res: Response) {
+  try {
+    const userId = req.user?.sub;
+    const tripId = Number(req.params.tripId);
+
+    if (!userId) {
+      return res.status(401).json({ message: "Unauthorized" });
+    }
+    if (!tripId || Number.isNaN(tripId)) {
+      return res.status(400).json({ message: "ID trajet invalide" });
+    }
+
+    const trip = await prisma.trip.findUnique({
+      where: { id: tripId },
+      select: { id: true, driverId: true },
+    });
+
+    if (!trip) {
+      return res.status(404).json({ message: "Trip not found" });
+    }
+    if (trip.driverId !== userId) {
+      return res.status(403).json({ message: "Action non autorisée." });
+    }
+
+    const bookings = await prisma.booking.findMany({
+      where: { tripId },
+      include: {
+        passenger: {
+          select: { id: true, firstName: true, lastName: true, email: true, rating: true },
+        },
+      },
+      orderBy: { createdAt: "desc" },
+    });
+
+    return res.json({ bookings });
+  } catch (error) {
+    console.error(error);
+    return res.status(500).json({ message: "Internal server error" });
+  }
+}

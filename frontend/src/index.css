@@ -136,7 +136,7 @@ textarea:focus {
 }
 
 .gc-container {
-  width: min(1100px, 100%);
+  width: min(1280px, 100%);
   margin: 0 auto;
   padding: 0 16px;
 }
@@ -178,7 +178,13 @@ textarea:focus {
   display: flex;
   gap: 12px;
   align-items: center;
-  flex-wrap: wrap;
+  flex-wrap: nowrap;
+  overflow-x: auto;
+}
+
+.gc-nav a,
+.gc-nav button {
+  white-space: nowrap;
 }
 
 .gc-link {

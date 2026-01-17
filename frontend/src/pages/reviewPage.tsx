@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import { useAuth } from "../auth/AuthContext";
 import { apiFetch } from "../services/api";
 
@@ -21,6 +22,8 @@ type Review = {
 
 export function ReviewPage() {
   const { token, user } = useAuth();
+  const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
 
   const [myReviews, setMyReviews] = useState<Review[]>([]);
   const [error, setError] = useState<string | null>(null);
@@ -30,6 +33,17 @@ export function ReviewPage() {
   const [revieweeId, setRevieweeId] = useState("");
   const [rating, setRating] = useState(5);
   const [comment, setComment] = useState("");
+
+  const prefilledTripId = searchParams.get("tripId") ?? "";
+  const prefilledRevieweeId = searchParams.get("revieweeId") ?? "";
+  const isPrefilled = Boolean(prefilledTripId && prefilledRevieweeId);
+
+  useEffect(() => {
+    if (prefilledTripId) setTripId(prefilledTripId);
+    if (prefilledRevieweeId) setRevieweeId(prefilledRevieweeId);
+    // On ne veut pas ré-écraser si l'utilisateur modifie ensuite
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   useEffect(() => {
     if (!token) return;
@@ -84,11 +98,16 @@ export function ReviewPage() {
       });
 
       alert("Avis ajouté avec succès");
-      setTripId("");
-      setRevieweeId("");
+      if (!isPrefilled) {
+        setTripId("");
+        setRevieweeId("");
+      }
       setRating(5);
       setComment("");
-      loadMyReviews();
+      void loadMyReviews();
+      if (isPrefilled) {
+        navigate("/my-bookings");
+      }
     } catch (err: unknown) {
       const message =
         err && typeof err === "object" && "message" in err
@@ -110,17 +129,25 @@ export function ReviewPage() {
       <section>
         <h3>Laisser un avis</h3>
 
+        {isPrefilled ? (
+          <p style={{ marginTop: 0, color: "var(--muted)" }}>
+            Pré-rempli depuis une réservation: il ne reste qu’à noter et commenter.
+          </p>
+        ) : null}
+
         <form onSubmit={onSubmit} style={{ display: "grid", gap: 8 }}>
           <input
             placeholder="Trip ID"
             value={tripId}
             onChange={(e) => setTripId(e.target.value)}
+            disabled={Boolean(prefilledTripId)}
           />
 
           <input
             placeholder="Utilisateur à évaluer (ID)"
             value={revieweeId}
             onChange={(e) => setRevieweeId(e.target.value)}
+            disabled={Boolean(prefilledRevieweeId)}
           />
 
           <label htmlFor="rating">Note</label>

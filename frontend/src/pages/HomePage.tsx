@@ -1,6 +1,25 @@
-import {Link, useNavigate} from "react-router-dom";
-import {useAuth} from "../auth/AuthContext";
-import {useState} from "react";
+import { Link, useNavigate } from "react-router-dom";
+import { useAuth } from "../auth/AuthContext";
+import { useState } from "react";
+import { useQuery } from "@tanstack/react-query";
+import { apiFetch } from "../services/api";
+
+type PublicStatsResponse = {
+  success: boolean;
+  data: {
+    tripsTotal: number;
+    tripsPast: number;
+    tripsShared: number;
+    totalPassengers: number;
+    totalDistanceKm: number;
+    totalPassengerKm: number;
+    totalCO2Saved: number;
+    co2Equivalent: {
+      treesPlanted: number;
+      carKmAvoided: number;
+    };
+  };
+};
 
 export function HomePage() {
   const { user, isLoading} = useAuth();
@@ -21,6 +40,13 @@ export function HomePage() {
      if (isLoading) {
     return <p>Chargement...</p>;
   }
+
+	const statsQuery = useQuery({
+		queryKey: ["publicStats"],
+		queryFn: async () => apiFetch<PublicStatsResponse>("/api/public/stats"),
+	});
+
+	const stats = statsQuery.data?.data;
 
   return (
     <div className="gc-grid" style={{ gap: 18 }}>
@@ -64,23 +90,35 @@ export function HomePage() {
             </div>
           </div>
 
-          <div className="gc-grid gc-grid-3" style={{ gap: 12 }}>
-            <div className="gc-stat">
-              <div className="gc-statLabel">Trajets</div>
-              <div className="gc-statValue">Rapide</div>
-              <div style={{ color: "var(--muted)", fontSize: 13 }}>Recherche + filtre en 1 écran</div>
+        <div className="gc-grid gc-grid-3" style={{ gap: 12 }}>
+          <div className="gc-stat">
+            <div className="gc-statLabel">CO₂ économisé</div>
+            <div className="gc-statValue">
+              {statsQuery.isLoading ? "…" : stats ? `${stats.totalCO2Saved} kg` : "—"}
             </div>
-            <div className="gc-stat">
-              <div className="gc-statLabel">Réservation</div>
-              <div className="gc-statValue">Simple</div>
-              <div style={{ color: "var(--muted)", fontSize: 13 }}>Statut: attente / acceptée</div>
-            </div>
-            <div className="gc-stat">
-              <div className="gc-statLabel">Impact</div>
-              <div className="gc-statValue">+Vert</div>
-              <div style={{ color: "var(--muted)", fontSize: 13 }}>Moins d’autos, moins d’émissions</div>
+            <div style={{ color: "var(--muted)", fontSize: 13 }}>
+              {stats ? `≈ ${stats.co2Equivalent.treesPlanted} arbres` : "Impact de la communauté"}
             </div>
           </div>
+          <div className="gc-stat">
+            <div className="gc-statLabel">Trajets partagés</div>
+            <div className="gc-statValue">
+              {statsQuery.isLoading ? "…" : stats ? stats.tripsShared : "—"}
+            </div>
+            <div style={{ color: "var(--muted)", fontSize: 13 }}>
+              {stats ? `${stats.totalPassengers} passagers acceptés` : "Basé sur les trajets passés"}
+            </div>
+          </div>
+          <div className="gc-stat">
+            <div className="gc-statLabel">Trajets publiés</div>
+            <div className="gc-statValue">
+              {statsQuery.isLoading ? "…" : stats ? stats.tripsTotal : "—"}
+            </div>
+            <div style={{ color: "var(--muted)", fontSize: 13 }}>
+              {stats ? `≈ ${stats.co2Equivalent.carKmAvoided} km auto évités` : "Total plateforme"}
+            </div>
+          </div>
+        </div>
         </div>
       </section>
 
