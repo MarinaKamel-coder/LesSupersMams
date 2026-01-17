@@ -1,5 +1,6 @@
 import type { Request, Response } from "express";
 import prisma from "../prisma/prisma";
+import { emitToTrip, emitToUser } from "../realtime/socket";
 
 /**
  * Envoyer un message dans le cadre d'un Trip
@@ -31,6 +32,15 @@ export async function sendMessage(req: Request, res: Response) {
         }
       }
     });
+
+		emitToTrip(Number(tripId), "message:new", {
+			tripId: Number(tripId),
+			message: newMessage,
+		});
+		emitToUser(Number(trip.driverId), "message:new", {
+			tripId: Number(tripId),
+			message: newMessage,
+		});
 
     return res.status(201).json(newMessage);
   } catch (error) {

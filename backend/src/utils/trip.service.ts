@@ -29,7 +29,7 @@ export const createTripLogic = async (driverId: number, tripData: any) => {
     },
     include: {
       vehicle: true,
-      driver: { select: { firstName: true, lastName: true, rating: true } }
+      driver: { select: { id: true, firstName: true, lastName: true, rating: true } }
     }
   });
 };
@@ -38,19 +38,75 @@ export const createTripLogic = async (driverId: number, tripData: any) => {
  * Récupérer tous les trajets 
  */
 export const getAllTripsService = async (filters: any = {}) => {
-  const { departure, arrival, date } = filters;
+  const { departure, arrival, date, timeFrom, timeTo, priceMax, seats } = filters;
+
+  const parsedPriceMax = priceMax != null && String(priceMax).trim() !== "" ? Number(priceMax) : null;
+  const parsedSeats = seats != null && String(seats).trim() !== "" ? Number(seats) : null;
+
+  const where: any = {
+    departureCity: { contains: departure, mode: 'insensitive' },
+    arrivalCity: { contains: arrival, mode: 'insensitive' },
+  };
+
+  // Places disponibles
+  if (parsedSeats != null && Number.isFinite(parsedSeats) && parsedSeats > 0) {
+    where.availableSeats = { gte: parsedSeats };
+  } else {
+    where.availableSeats = { gt: 0 };
+  }
+
+  // Prix max
+  if (parsedPriceMax != null && Number.isFinite(parsedPriceMax) && parsedPriceMax >= 0) {
+    where.pricePerSeat = { lte: parsedPriceMax };
+  }
+
+  // Date (YYYY-MM-DD) + heure (HH:MM)
+  if (date) {
+    const dateStr = String(date).trim();
+    const base = new Date(dateStr);
+    if (!Number.isNaN(base.getTime())) {
+      let start: Date | null = null;
+      let end: Date | null = null;
+
+      // Si on reçoit juste une date, on filtre la journée complète (UTC, car new Date('YYYY-MM-DD') est en UTC)
+      if (/^\d{4}-\d{2}-\d{2}$/.test(dateStr)) {
+        start = new Date(base);
+        start.setUTCHours(0, 0, 0, 0);
+        end = new Date(start);
+        end.setUTCDate(end.getUTCDate() + 1);
+      } else {
+        // Sinon, on garde un filtre "à partir de" (compat ISO)
+        start = base;
+      }
+
+      // Appliquer heure min/max seulement si on a une date au format YYYY-MM-DD
+      if (start && /^\d{4}-\d{2}-\d{2}$/.test(dateStr)) {
+        if (timeFrom && /^\d{2}:\d{2}$/.test(String(timeFrom))) {
+          const [h, m] = String(timeFrom).split(":").map((x) => Number(x));
+          const dt = new Date(start);
+          dt.setUTCHours(h, m, 0, 0);
+          start = dt;
+        }
+
+        if (timeTo && /^\d{2}:\d{2}$/.test(String(timeTo))) {
+          const [h, m] = String(timeTo).split(":").map((x) => Number(x));
+          const dt = new Date(start);
+          dt.setUTCHours(h, m, 59, 999);
+          end = dt;
+        }
+      }
+
+      where.departureTime = {
+        ...(start ? { gte: start } : {}),
+        ...(end ? { lt: end } : {}),
+      };
+    }
+  }
   
   return await prisma.trip.findMany({
-    where: {
-      departureCity: { contains: departure, mode: 'insensitive' },
-      arrivalCity: { contains: arrival, mode: 'insensitive' },
-      availableSeats: { gt: 0 },
-      ...(date && { 
-        departureTime: { gte: new Date(date) } 
-      })
-    },
+    where,
     include: {
-      driver: { select: { firstName: true, lastName: true, avatarUrl: true, rating: true } },
+      driver: { select: { id: true, firstName: true, lastName: true, avatarUrl: true, rating: true } },
       vehicle: true
     },
     orderBy: { departureTime: 'asc' }
@@ -64,7 +120,7 @@ export const getTripByIdService = async (tripId: number) => {
   return await prisma.trip.findUnique({
     where: { id: tripId },
     include: {
-      driver: { select: { firstName: true, lastName: true, rating: true, bio: true, avatarUrl: true } },
+      driver: { select: { id: true, firstName: true, lastName: true, rating: true, bio: true, avatarUrl: true } },
       vehicle: true,
       bookings: { include: { passenger: { select: { firstName: true, avatarUrl: true } } } }
     }

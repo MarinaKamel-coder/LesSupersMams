@@ -1,12 +1,19 @@
-import React, { useEffect, useState } from 'react';
-import { useParams } from 'react-router-dom';
-import { userService } from '../services/api'; // On utilise ton service Axios
-import type { User, Trip } from '../types/user';
-import { Star, ShieldCheck, Car, Calendar, CheckCircle } from 'lucide-react';
-import '../style/profile.css';
+import { useEffect, useState } from "react";
+import { useNavigate, useParams } from "react-router-dom";
+import { apiFetch } from "../services/api";
+import type { Trip, User } from "../types/user";
+import "../style/profile.css";
 
-export const PublicProfilePage: React.FC = () => {
+type PublicProfileResponse = {
+  success: boolean;
+  data: {
+    user: User;
+  };
+};
+
+export function PublicProfilePage() {
   const { id } = useParams<{ id: string }>();
+  const navigate = useNavigate();
   
   // Utilisation des états pour stocker les données de l'API
   const [profile, setProfile] = useState<User | null>(null);
@@ -14,32 +21,28 @@ export const PublicProfilePage: React.FC = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-useEffect(() => {
-  const fetchPublicData = async () => {
-    if (!id) return;
-    try {
-      setLoading(true);
-      
-      // On récupère les données via le service Axios
-      const response = await userService.getProfile(); 
-      
-      // Mise à jour du profil
-      setProfile(response.user); 
-      
-      // Adaptation dynamique :
-      // On vérifie si 'trips' existe dans l'objet user renvoyé par le backend.
-      // Si oui, on les utilise, sinon on initialise un tableau vide.
-      setTrips(response.user.tripsPosted || []); 
-      
-    } catch (err) {
-      setError("Impossible de charger le profil.");
-    } finally {
-      setLoading(false);
-    }
-  };
+  useEffect(() => {
+    const fetchPublicData = async () => {
+      if (!id) return;
+      try {
+        setLoading(true);
+        setError(null);
 
-  fetchPublicData();
-}, [id]);
+        const response = await apiFetch<PublicProfileResponse>(
+          `/api/public/users/${id}`
+        );
+
+        setProfile(response.data.user);
+        setTrips(response.data.user.tripsPosted || []);
+      } catch {
+        setError("Impossible de charger le profil.");
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchPublicData();
+  }, [id]);
 
   if (loading) return <div className="profile-container text-center">Chargement...</div>;
   if (error || !profile) return <div className="profile-container text-red-500">{error}</div>;
@@ -54,24 +57,14 @@ useEffect(() => {
             className="profile-avatar"
             alt={`${profile.firstName} avatar`}
           />
-          {profile.role === 'ADMIN' && (
-            <div className="admin-badge">
-              <ShieldCheck size={20} />
-            </div>
-          )}
+          {profile.role === "ADMIN" ? <div className="admin-badge">ADMIN</div> : null}
         </div>
 
         <div className="profile-info">
           <h1 className="profile-name">{profile.firstName} {profile.lastName}</h1>
           <div className="rating-display">
-            <div className="stars-container">
-              {[...Array(5)].map((_, i) => (
-                <Star 
-                  key={i} 
-                  size={18} 
-                  fill={i < Math.floor(profile.rating) ? "currentColor" : "none"} 
-                />
-              ))}
+            <div className="stars-container" aria-label={`Note ${profile.rating}/5`}>
+              {"★".repeat(Math.floor(profile.rating)).padEnd(5, "☆")}
             </div>
             <span className="font-bold text-gray-700">{profile.rating}/5</span>
           </div>
@@ -87,18 +80,17 @@ useEffect(() => {
           <h3 className="font-bold mb-4 text-gray-900 border-b pb-2">Vérifications</h3>
           <ul className="space-y-3">
             <li className="flex items-center gap-2 text-emerald-600 text-sm font-medium">
-              <CheckCircle size={16} /> Email vérifié
+              ✓ Email vérifié
             </li>
             <li className="flex items-center gap-2 text-gray-500 text-sm">
-              <Calendar size={16} /> Membre depuis {new Date(profile.createdAt).getFullYear()}
+              📅 Membre depuis {new Date(profile.createdAt).getFullYear()}
             </li>
           </ul>
         </aside>
 
         <main className="space-y-4">
           <h2 className="text-xl font-bold flex items-center gap-2 text-gray-800">
-            <Car size={22} className="text-emerald-500" />
-            Trajets proposés par {profile.firstName}
+            🚗 Trajets proposés par {profile.firstName}
           </h2>
           
           {trips.length > 0 ? (
@@ -114,7 +106,7 @@ useEffect(() => {
                     {new Date(tripItem.departureTime).toLocaleDateString('fr-CA')}
                   </p>
                 </div>
-                <button className="btn-view-trip">
+                <button className="btn-view-trip" onClick={() => navigate(`/trip/${tripItem.id}`)}>
                   Voir l'offre
                 </button>
               </div>
@@ -128,4 +120,4 @@ useEffect(() => {
       </div>
     </div>
   );
-};
+}

@@ -8,7 +8,6 @@
     "start": "node --import tsx src/server.ts",
     "dev": "node --import tsx src/server.ts",
     "seed": "node --import tsx prisma/seed.ts"
-   
   },
   "keywords": [],
   "author": "",
@@ -21,7 +20,8 @@
     "cors": "^2.8.5",
     "dotenv": "^17.2.3",
     "express": "^5.2.1",
-    "jsonwebtoken": "^9.0.3"
+    "jsonwebtoken": "^9.0.3",
+    "socket.io": "^4.8.3"
   },
   "devDependencies": {
     "@types/bcrypt": "^6.0.0",
