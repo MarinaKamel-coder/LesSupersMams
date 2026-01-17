@@ -1,4 +1,5 @@
 import { useQuery } from "@tanstack/react-query";
+import { Link } from "react-router-dom";
 import { useAuth } from "../auth/AuthContext";
 import { apiFetch } from "../services/api";
 
@@ -140,10 +141,30 @@ export function Dashboard() {
               <div>
                 <div style={{ fontWeight: 900 }}>Demandes en attente</div>
                 <div style={{ marginTop: 6 }}>
-                  Reçues: <b>{payload.data.pendingRequests.received}</b> · Envoyées: <b>{payload.data.pendingRequests.sent}</b>
+                  {/* Lien vers les réservations reçues (en tant que chauffeur) */}
+                  <Link 
+                    to="/my-trips" 
+                    style={{ color: "inherit", textDecoration: "underline", marginRight: 10 }}
+                  >
+                    Reçues: <b>{payload.data.pendingRequests.received}</b>
+                  </Link>
+                  
+                  · 
+                  
+                  {/* Lien vers ses propres demandes (en tant que passager) */}
+                  <Link 
+                    to="/my-bookings" 
+                    style={{ color: "inherit", textDecoration: "underline", marginLeft: 10 }}
+                  >
+                    Envoyées: <b>{payload.data.pendingRequests.sent}</b>
+                  </Link>
                 </div>
               </div>
-              <div style={{ fontWeight: 900 }}>#{payload.data.leaderboardPosition}</div>
+              
+              <div style={{ textAlign: "right" }}>
+                <div style={{ fontSize: 10, textTransform: "uppercase", opacity: 0.8 }}>Classement</div>
+                <div style={{ fontWeight: 900, fontSize: 20 }}>#{payload.data.leaderboardPosition}</div>
+              </div>
             </div>
           </div>
         </div>
